@@ -1,0 +1,49 @@
+﻿<UserControl x:Class="szakdolgozat.Views.AssetAssignmentListView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:szakdolgozat.Views">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+
+        <local:ToolbarView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
+
+        <DataGrid x:Name="AssetDataGrid" 
+                  ItemsSource="{Binding AssetAssignments}" 
+                  SelectedItem="{Binding SelectedAssignment}" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  Margin="15" 
+                  Grid.Row="1" 
+                  Grid.Column="0">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Asset Name" Binding="{Binding Asset.AssetName}" />
+                <DataGridTextColumn Header="Assigned User" Binding="{Binding UserFullName}" />
+                <DataGridTextColumn Header="Assignment Date" Binding="{Binding AssignmentDate, StringFormat=\{0:yyyy.MM.dd\}}" />
+                <DataGridTextColumn Header="Return Date" Binding="{Binding ReturnDate, StringFormat=\{0:yyyy.MM.dd\}}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <local:AssetAssignmentFilterView Grid.Row="1" Grid.Column="1" Margin="10"/>
+
+        <StackPanel Orientation="Horizontal" 
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top" 
+                    Margin="10" 
+                    Grid.Row="2" 
+                    Grid.Column="0">
+            <Button Content="Add Assignment" Command="{Binding AddAssetAssignmentCommand}" 
+                    Width="120" Height="30" Margin="0,0,10,0" />
+            <Button Content="Update Assignment" Command="{Binding UpdateAssetAssignmentCommand}" 
+                    Width="120" Height="30" Margin="0,0,10,0" />
+        </StackPanel>
+    </Grid>
+</UserControl>

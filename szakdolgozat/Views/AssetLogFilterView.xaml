@@ -1,0 +1,54 @@
+﻿<UserControl x:Class="szakdolgozat.Views.AssetLogFilterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:szakdolgozat.Views">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <Style x:Key="PlaceholderTextBoxStyle" TargetType="TextBox">
+            <Setter Property="BorderBrush" Value="Gray"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid>
+                            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                <TextBox Text="{Binding Text, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                         Background="Transparent" BorderThickness="0" Padding="5"/>
+                            </Border>
+                            <TextBlock Text="{TemplateBinding Tag}" 
+                                       Foreground="Gray" 
+                                       Margin="5,5,0,0" 
+                                       VerticalAlignment="Top" 
+                                       HorizontalAlignment="Left"
+                                       IsHitTestVisible="False" 
+                                       Visibility="{Binding Text.IsEmpty, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <StackPanel Margin="10">
+            <TextBox x:Name="AssetNameTextBox" Text="{Binding AssetName}" Tag="Asset Name" Style="{StaticResource PlaceholderTextBoxStyle}" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Action" Margin="0,0,0,5"/>
+            <ComboBox x:Name="ActionComboBox" ItemsSource="{Binding Actions}" SelectedItem="{Binding SelectedAction}" Tag="Action" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Performed By" Margin="0,0,0,5"/>
+            <ComboBox DisplayMemberPath="DisplayName" x:Name="PerformedByComboBox" ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" Tag="Performed By" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Timestamp From" Margin="0,0,0,5"/>
+            <DatePicker SelectedDate="{Binding TimestampFrom}" Margin="0,0,0,10" Tag="Timestamp From"/>
+
+            <TextBlock Text="Timestamp To" Margin="0,0,0,5"/>
+            <DatePicker SelectedDate="{Binding TimestampTo}" Margin="0,0,0,10" Tag="Timestamp To"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 10 0 0">
+                <Button Content="Apply Filters" Command="{Binding ApplyFilterCommand}" Height="25" Width="80" Margin="0,0,5,0"/>
+                <Button Content="Clear Filters" Command="{Binding ClearFilterCommand}" Height="25" Width="80" Margin="5,0,0,0"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

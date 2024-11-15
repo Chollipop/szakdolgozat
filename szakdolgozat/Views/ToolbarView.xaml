@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="szakdolgozat.Views.ToolbarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:local="clr-namespace:szakdolgozat.Views"
+             xmlns:szakdolgozat="clr-namespace:szakdolgozat">
+
+    <DockPanel>
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+            <Button Padding="5" Content="View Assets"  Command="{Binding ViewAssetsCommand}"/>
+            <Button Padding="5" Content="View Asset Assignments" Command="{Binding ViewAssetAssignmentsCommand}" />
+            <Button Padding="5" Content="View Asset Logs" Command="{Binding ViewAssetLogsCommand}" />
+        </StackPanel>
+        <Button HorizontalAlignment="Right" MaxWidth="50" Padding="5" Content="Logout" Command="{Binding LogoutCommand}" DockPanel.Dock="Right" />
+    </DockPanel>
+
+</UserControl>

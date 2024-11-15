@@ -1,0 +1,35 @@
+﻿<UserControl x:Class="szakdolgozat.Views.AssetLogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:szakdolgozat.Views">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+
+        <local:ToolbarView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
+
+        <DataGrid x:Name="AssetLogDataGrid" 
+                  ItemsSource="{Binding AssetLogs}"
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  Margin="15" 
+                  Grid.Row="1" 
+                  Grid.Column="0">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Asset Name" Binding="{Binding Asset.AssetName}" />
+                <DataGridTextColumn Header="Action" Binding="{Binding Action}" />
+                <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp, StringFormat=\{0:yyyy.MM.dd HH:mm:ss\}}" />
+                <DataGridTextColumn Header="Performed By" Binding="{Binding PerformedByFullName}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <local:AssetLogFilterView Grid.Row="1" Grid.Column="1" Margin="10"/>
+    </Grid>
+</UserControl>
