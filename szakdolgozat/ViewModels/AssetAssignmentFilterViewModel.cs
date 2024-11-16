@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 using szakdolgozat.Models;
 using szakdolgozat.Services;
@@ -93,6 +94,7 @@ namespace szakdolgozat.ViewModels
             {
                 Users.Add(user);
             }
+            AssignmentDateFrom = DateTime.Today;
             _assetAssignmentListViewModel.AssetAssignmentsChanged += OnAssetAssignmentsChanged;
         }
 
@@ -131,7 +133,6 @@ namespace szakdolgozat.ViewModels
             {
                 filteredAssignments = filteredAssignments.Where(a => a.User == SelectedUser.Id).ToList();
             }
-
             if (AssignmentDateFrom.HasValue)
             {
                 filteredAssignments = filteredAssignments.Where(a => a.AssignmentDate >= AssignmentDateFrom.Value).ToList();
@@ -156,36 +157,17 @@ namespace szakdolgozat.ViewModels
             _assetAssignmentListViewModel.NotifyAssetAssignmentsChanged();
         }
 
+
         private void ClearFilters()
         {
             AssetName = string.Empty;
             SelectedUser = Users.FirstOrDefault();
-            AssignmentDateFrom = null;
+            AssignmentDateFrom = DateTime.Today;
             AssignmentDateTo = null;
             ReturnDateFrom = null;
             ReturnDateTo = null;
 
-            List<AssetAssignment> assignments;
-            using (var scope = App.ServiceProvider.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                var assignmentsList = context.AssetAssignments
-                    .Include(a => a.Asset)
-                    .Select(a => new AssetAssignment
-                    {
-                        AssignmentID = a.AssignmentID,
-                        AssetID = a.AssetID,
-                        Asset = a.Asset,
-                        User = a.User,
-                        AssignmentDate = a.AssignmentDate,
-                        ReturnDate = a.ReturnDate
-                    })
-                    .ToList();
-                assignments = new List<AssetAssignment>(assignmentsList);
-            }
-
-            _assetAssignmentListViewModel.AssetAssignments = new ObservableCollection<AssetAssignment>(assignments);
-            _assetAssignmentListViewModel.NotifyAssetAssignmentsChanged();
+            ApplyFilter();
         }
     }
 }

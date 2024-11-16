@@ -19,7 +19,6 @@
             <v:AssetLogView />
         </DataTemplate>
     </Window.Resources>
-    
     <Grid>
         <ContentControl Content="{Binding CurrentViewModel}" />
     </Grid>

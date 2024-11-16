@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 using szakdolgozat.Models;
 using szakdolgozat.Services;
@@ -237,32 +238,7 @@ namespace szakdolgozat.ViewModels
             ValueTo = null;
             SelectedStatus = Statuses[1];
 
-            List<Asset> assets;
-            using (var scope = App.ServiceProvider.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                var assetsList = context.Assets
-                    .Include(a => a.AssetType)
-                    .Where(a => a.Status == "Active")
-                    .Select(a => new Asset
-                    {
-                        AssetID = a.AssetID,
-                        AssetName = a.AssetName,
-                        AssetTypeID = a.AssetTypeID,
-                        AssetType = a.AssetType,
-                        Owner = a.Owner,
-                        Location = a.Location,
-                        PurchaseDate = a.PurchaseDate,
-                        Value = a.Value,
-                        Status = a.Status,
-                        Description = a.Description
-                    })
-                    .ToList();
-                assets = new List<Asset>(assetsList);
-            }
-
-            AssetListViewModel.Assets = new ObservableCollection<Asset>(assets);
-            AssetListViewModel.NotifyAssetsChanged();
+            ApplyFilter();
         }
     }
 }

@@ -8,20 +8,20 @@
     <Grid>
         <StackPanel Margin="10">
             <TextBlock Text="Asset" Margin="0,0,0,5"/>
-            <ComboBox ItemsSource="{Binding Assets}" Margin="0,0,0,10" DisplayMemberPath="AssetName" SelectedItem="{Binding SelectedAsset}" />
+            <ComboBox ItemsSource="{Binding Assets}" Margin="0,0,0,10" DisplayMemberPath="AssetName" SelectedItem="{Binding SelectedAsset}" IsEnabled="{Binding Assets.Count}" />
 
             <TextBlock Text="User" Margin="0,0,0,5"/>
             <ComboBox ItemsSource="{Binding Users}" Margin="0,0,0,10" DisplayMemberPath="DisplayName" SelectedItem="{Binding SelectedUser}" />
 
             <TextBlock Text="Assignment Date" Margin="0,0,0,5"/>
-            <DatePicker SelectedDate="{Binding AssignmentDate}" Margin="0,0,0,10"/>
+            <DatePicker IsEnabled="{Binding IsUpdating}" SelectedDate="{Binding AssignmentDate}" Margin="0,0,0,10"/>
 
             <TextBlock Text="Return Date" Margin="0,0,0,5"/>
             <DatePicker SelectedDate="{Binding ReturnDate}" Margin="0,0,0,10"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 10 0 0">
                 <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="0 0 10 0" Height="25" Width="100"/>
-                <Button Content="Submit" Command="{Binding SubmitCommand}" Height="25" Width="100"/>
+                <Button Content="Submit" Command="{Binding SubmitCommand}" IsEnabled="{Binding CanSubmit}" Height="25" Width="100"/>
             </StackPanel>
         </StackPanel>
     </Grid>

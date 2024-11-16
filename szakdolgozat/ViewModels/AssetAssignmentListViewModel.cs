@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 using szakdolgozat.Models;
 using szakdolgozat.Views;
@@ -9,6 +10,7 @@ namespace szakdolgozat.ViewModels
 {
     public class AssetAssignmentListViewModel : BaseViewModel
     {
+        private ObservableCollection<Asset> _assignableAssets;
         private AssetAssignment _selectedAssignment;
 
         public ObservableCollection<AssetAssignment> AssetAssignments { get; set; }
@@ -36,6 +38,32 @@ namespace szakdolgozat.ViewModels
             UpdateAssetAssignmentCommand = new RelayCommand(UpdateAssetAssignment, CanUpdateAssetAssignment);
         }
 
+        private void GetAllAssignableAssets()
+        {
+            using (var scope = App.ServiceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
+                var assetsList = context.Assets
+                    .Where(a => a.Status == "Active" && !context.AssetAssignments
+                    .Any(aa => aa.AssetID == a.AssetID && DateTime.Now <= aa.ReturnDate))
+                    .Select(a => new Asset
+                    {
+                        AssetID = a.AssetID,
+                        AssetName = a.AssetName,
+                        AssetTypeID = a.AssetTypeID,
+                        AssetType = a.AssetType,
+                        Owner = a.Owner,
+                        Location = a.Location,
+                        PurchaseDate = a.PurchaseDate,
+                        Value = a.Value,
+                        Status = a.Status,
+                        Description = a.Description
+                    })
+                    .ToList();
+                _assignableAssets = new ObservableCollection<Asset>(assetsList);
+            }
+        }
+
         private async Task LoadAssetAssignments()
         {
             using (var scope = App.ServiceProvider.CreateScope())
@@ -55,12 +83,20 @@ namespace szakdolgozat.ViewModels
                     .ToListAsync();
                 AssetAssignments = new ObservableCollection<AssetAssignment>(assignmentsList);
                 OnPropertyChanged(nameof(AssetAssignments));
+
+                AssetAssignmentsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
         private async void AddAssetAssignment()
         {
-            var viewModel = new AssetAssignmentDialogViewModel();
+            GetAllAssignableAssets();
+            if (_assignableAssets.Count == 0)
+            {
+                MessageBox.Show("There are no assets available for assignment.", "No assets available", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            var viewModel = new AssetAssignmentDialogViewModel(_assignableAssets);
             var addAssetWindow = new AssetAssignmentDialogView(viewModel);
             addAssetWindow.Title = "Add Assignment";
             if (addAssetWindow.ShowDialog() == true)
@@ -86,7 +122,8 @@ namespace szakdolgozat.ViewModels
         {
             if (SelectedAssignment != null)
             {
-                var viewModel = new AssetAssignmentDialogViewModel(SelectedAssignment);
+                GetAllAssignableAssets();
+                var viewModel = new AssetAssignmentDialogViewModel(_assignableAssets, SelectedAssignment);
                 var addAssetWindow = new AssetAssignmentDialogView(viewModel);
                 addAssetWindow.Title = "Update Assignment";
                 if (addAssetWindow.ShowDialog() == true)

@@ -36,6 +36,8 @@ namespace szakdolgozat.ViewModels
                     .ToListAsync();
                 AssetLogs = new ObservableCollection<AssetLog>(logsList);
                 OnPropertyChanged(nameof(AssetLogs));
+
+                AssetLogsChangedReapplyFilters?.Invoke(this, EventArgs.Empty);
             }
         }
 

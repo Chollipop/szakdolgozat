@@ -66,6 +66,8 @@ namespace szakdolgozat.ViewModels
                     .ToListAsync();
                 Assets = new ObservableCollection<Asset>(assetsList);
                 OnPropertyChanged(nameof(Assets));
+
+                AssetsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -209,7 +211,7 @@ namespace szakdolgozat.ViewModels
                 }
 
                 bool hasAssignments = context.AssetAssignments
-                    .Any(aa => aa.AssetID == SelectedAsset.AssetID);
+                    .Any(aa => aa.AssetID == SelectedAsset.AssetID && DateTime.Now <= aa.ReturnDate);
 
                 return SelectedAsset.Status != "Retired" && !hasAssignments;
             }

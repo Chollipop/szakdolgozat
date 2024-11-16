@@ -266,7 +266,8 @@ namespace szakdolgozat.ViewModels
             using (var scope = App.ServiceProvider.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                HasAssignment = !context.AssetAssignments.Any(aa => aa.AssetID == _asset.AssetID);
+                HasAssignment = !context.AssetAssignments
+                    .Any(aa => aa.AssetID == Asset.AssetID && DateTime.Now <= aa.ReturnDate);
             }
         }
 

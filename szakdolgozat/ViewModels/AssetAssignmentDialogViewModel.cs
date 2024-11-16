@@ -10,6 +10,7 @@ namespace szakdolgozat.ViewModels
     public class AssetAssignmentDialogViewModel : BaseViewModel
     {
         private AssetAssignment _assetAssignment;
+        private bool _canSubmit;
 
         public ObservableCollection<UserProfile> Users { get; set; }
         public ObservableCollection<Asset> Assets { get; set; }
@@ -50,7 +51,9 @@ namespace szakdolgozat.ViewModels
             set
             {
                 _assetAssignment.AssignmentDate = value;
+                _canSubmit = ReturnDate?.Date >= AssignmentDate?.Date;
                 OnPropertyChanged(nameof(AssignmentDate));
+                OnPropertyChanged(nameof(CanSubmit));
             }
         }
 
@@ -60,7 +63,9 @@ namespace szakdolgozat.ViewModels
             set
             {
                 _assetAssignment.ReturnDate = value;
+                _canSubmit = ReturnDate?.Date >= AssignmentDate?.Date;
                 OnPropertyChanged(nameof(ReturnDate));
+                OnPropertyChanged(nameof(CanSubmit));
             }
         }
 
@@ -84,14 +89,30 @@ namespace szakdolgozat.ViewModels
             }
         }
 
+        public bool CanSubmit
+        {
+            get
+            {
+                return _canSubmit;
+            }
+            set
+            {
+                _canSubmit = ReturnDate?.Date >= AssignmentDate?.Date;
+                OnPropertyChanged(nameof(CanSubmit));
+            }
+        }
+
+        public bool IsUpdating { get; set; }
+
         public ICommand SubmitCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public AssetAssignmentDialogViewModel(AssetAssignment assetAssignment = null)
+        public AssetAssignmentDialogViewModel(ObservableCollection<Asset> assignableAssets, AssetAssignment assetAssignment = null)
         {
+            IsUpdating = assetAssignment == null;
             _assetAssignment = assetAssignment ?? new AssetAssignment();
             Users = new ObservableCollection<UserProfile>(AuthenticationService.Instance.GetAllUsers());
-            Assets = new ObservableCollection<Asset>(GetAllAssets());
+            Assets = assignableAssets;
 
             if (_assetAssignment.User != null)
             {
@@ -104,7 +125,14 @@ namespace szakdolgozat.ViewModels
 
             if (_assetAssignment.Asset != null)
             {
-                SelectedAsset = Assets.Where(at => at.AssetID == _assetAssignment.AssetID).First();
+                if (Assets.Any(at => at.AssetID == _assetAssignment.AssetID))
+                {
+                    SelectedAsset = Assets.Where(at => at.AssetID == _assetAssignment.AssetID).First();
+                }
+                else if (Assets.Any())
+                {
+                    SelectedAsset = Assets.First();
+                }
             }
             else if (Assets.Any())
             {
@@ -150,18 +178,6 @@ namespace szakdolgozat.ViewModels
             {
                 window.DialogResult = false;
                 window.Close();
-            }
-        }
-
-        private IEnumerable<Asset> GetAllAssets()
-        {
-            using (var scope = App.ServiceProvider.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                var assignedAssetIds = context.AssetAssignments.Select(aa => aa.AssetID).ToList();
-                return context.Assets
-                    .Where(a => a.Status == "Active" && !assignedAssetIds.Contains(a.AssetID))
-                    .ToList();
             }
         }
     }
