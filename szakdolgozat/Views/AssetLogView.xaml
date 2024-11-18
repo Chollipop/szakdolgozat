@@ -1,7 +1,8 @@
 ﻿<UserControl x:Class="szakdolgozat.Views.AssetLogView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:szakdolgozat.Views">
+             xmlns:local="clr-namespace:szakdolgozat.Views"
+             xmlns:components="clr-namespace:szakdolgozat.Components">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -12,7 +13,7 @@
             <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
 
-        <local:ToolbarView Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
+        <components:Toolbar Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
 
         <DataGrid x:Name="AssetLogDataGrid" 
                   ItemsSource="{Binding AssetLogs}"
@@ -30,6 +31,6 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <local:AssetLogFilterView Grid.Row="1" Grid.Column="1" Margin="10"/>
+        <components:AssetLogFilter Grid.Row="1" Grid.Column="1" Margin="10"/>
     </Grid>
 </UserControl>

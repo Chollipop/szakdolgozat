@@ -5,6 +5,7 @@ using szakdolgozat.Services;
 using szakdolgozat.Stores;
 using szakdolgozat.ViewModels;
 using szakdolgozat.Views;
+using szakdolgozat.Components;
 
 namespace szakdolgozat
 {
@@ -44,9 +45,9 @@ namespace szakdolgozat
             services.AddSingleton<AssetListView>();
             services.AddSingleton<AssetAssignmentListView>();
             services.AddSingleton<AssetLogView>();
-            services.AddSingleton<AssetFilterView>();
-            services.AddSingleton<AssetAssignmentFilterView>();
-            services.AddSingleton<AssetLogFilterView>();
+            services.AddSingleton<AssetFilter>();
+            services.AddSingleton<AssetAssignmentFilter>();
+            services.AddSingleton<AssetLogFilter>();
         }
 
         private INavigationService CreateLoginNavigationService(IServiceProvider serviceProvider)

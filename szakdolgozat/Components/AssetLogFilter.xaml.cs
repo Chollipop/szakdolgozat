@@ -2,11 +2,11 @@
 using System.Windows.Controls;
 using szakdolgozat.ViewModels;
 
-namespace szakdolgozat.Views
+namespace szakdolgozat.Components
 {
-    public partial class AssetLogFilterView : UserControl
+    public partial class AssetLogFilter : UserControl
     {
-        public AssetLogFilterView()
+        public AssetLogFilter()
         {
             InitializeComponent();
             this.DataContext = App.ServiceProvider.GetRequiredService<AssetLogFilterViewModel>();
