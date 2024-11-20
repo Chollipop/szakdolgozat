@@ -6,6 +6,7 @@ using szakdolgozat.Stores;
 using szakdolgozat.ViewModels;
 using szakdolgozat.Views;
 using szakdolgozat.Components;
+using Microsoft.Data.SqlClient;
 
 namespace szakdolgozat
 {
@@ -22,7 +23,12 @@ namespace szakdolgozat
 
         private void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<AssetDbContext>(options => options.UseSqlServer("Server=tcp:assetinventory.database.windows.net,1433;Initial Catalog=assetinventory;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication=\"Active Directory Default\";"));
+            services.AddDbContextFactory<AssetDbContext>(options =>
+            {
+                var sqlConnection = new SqlConnection("Server=tcp:assetinventory.database.windows.net,1433;Initial Catalog=assetinventory;Encrypt=True;TrustServerCertificate=False;MultipleActiveResultSets=True");
+                sqlConnection.AccessToken = AuthenticationService.Instance.SqlAccessToken;
+                options.UseSqlServer(sqlConnection);
+            });
 
             services.AddSingleton<NavigationStore>();
             services.AddSingleton<INavigationService>(x => CreateLoginNavigationService(x));

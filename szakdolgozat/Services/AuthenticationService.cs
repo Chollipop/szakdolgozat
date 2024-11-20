@@ -20,6 +20,7 @@ namespace szakdolgozat.Services
 
         public IAccount CurrentUser { get; private set; }
         public string AccessToken { get; private set; }
+        public string SqlAccessToken { get; private set; }
 
         private AuthenticationService()
         {
@@ -46,9 +47,11 @@ namespace szakdolgozat.Services
             try
             {
                 var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.Read", "Directory.Read.All" }).ExecuteAsync();
-
                 CurrentUser = result.Account;
                 AccessToken = result.AccessToken;
+
+                var sqlResult = await _publicClientApp.AcquireTokenSilent(new[] { "https://database.windows.net//.default" }, CurrentUser).ExecuteAsync();
+                SqlAccessToken = sqlResult.AccessToken;
 
                 if (!keepMeLoggedIn)
                 {
@@ -73,9 +76,12 @@ namespace szakdolgozat.Services
                 try
                 {
                     var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.Read", "Directory.Read.All" }, firstAccount).ExecuteAsync();
-
                     CurrentUser = result.Account;
                     AccessToken = result.AccessToken;
+
+                    var sqlResult = await _publicClientApp.AcquireTokenSilent(new[] { "https://database.windows.net//.default" }, CurrentUser).ExecuteAsync();
+                    SqlAccessToken = sqlResult.AccessToken;
+
                     return true;
                 }
                 catch (Exception ex)
