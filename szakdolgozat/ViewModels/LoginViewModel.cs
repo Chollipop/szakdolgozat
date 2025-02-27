@@ -24,6 +24,19 @@ namespace szakdolgozat.ViewModels
 
             if (loginSuccess)
             {
+                using (var scope = App.ServiceProvider.CreateScope())
+                {
+                    bool canConnect = false;
+                    while (!canConnect)
+                    {
+                        canConnect = scope.ServiceProvider.GetRequiredService<AssetDbContext>().Database.CanConnect();
+                        if (!canConnect)
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
+                }
+
                 navigationService.Navigate();
             }
         }

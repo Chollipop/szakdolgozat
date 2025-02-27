@@ -66,7 +66,19 @@ namespace szakdolgozat
             INavigationService initialNavigationService = ServiceProvider.GetRequiredService<INavigationService>();
             if (AuthenticationService.Instance.TryAutoLoginAsync().Result)
             {
-                initialNavigationService = new NavigationService<AssetListViewModel>(() => App.ServiceProvider.GetRequiredService<AssetListViewModel>());
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    bool canConnect = false;
+                    while (!canConnect)
+                    {
+                        canConnect = scope.ServiceProvider.GetRequiredService<AssetDbContext>().Database.CanConnect();
+                        if (!canConnect)
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
+                }
+                initialNavigationService = new NavigationService<AssetListViewModel>(() => ServiceProvider.GetRequiredService<AssetListViewModel>());
             }
             initialNavigationService.Navigate();
             MainWindow = ServiceProvider.GetRequiredService<MainWindow>();
