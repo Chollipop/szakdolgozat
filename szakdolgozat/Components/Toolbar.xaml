@@ -5,15 +5,49 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:local="clr-namespace:szakdolgozat.Components"
+             xmlns:converters="clr-namespace:szakdolgozat.Converters"
              xmlns:szakdolgozat="clr-namespace:szakdolgozat">
 
+    <UserControl.Resources>
+        <converters:SubtractConverter x:Key="SubtractConverter"/>
+    </UserControl.Resources>
+
     <DockPanel>
-        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-            <Button Padding="5" Content="View Assets"  Command="{Binding ViewAssetsCommand}"/>
-            <Button Padding="5" Content="View Asset Assignments" Command="{Binding ViewAssetAssignmentsCommand}" />
-            <Button Padding="5" Content="View Asset Logs" Command="{Binding ViewAssetLogsCommand}" />
-        </StackPanel>
-        <Button HorizontalAlignment="Right" MaxWidth="50" Padding="5" Content="Logout" Command="{Binding LogoutCommand}" DockPanel.Dock="Right" />
+        <Grid DockPanel.Dock="Left">
+            <ToggleButton x:Name="HamburgerButton" Content="☰" Width="35" Height="35"/>
+            <Popup x:Name="HamburgerMenuPopup" IsOpen="{Binding ElementName=HamburgerButton, Path=IsChecked}" AllowsTransparency="True" StaysOpen="False" Placement="Relative" PlacementTarget="{Binding ElementName=HamburgerButton}" HorizontalOffset="-250">
+                <Border Background="#E6FFFFFF" Width="200">
+                    <Border.Height>
+                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource AncestorType=Window}">
+                            <Binding.Converter>
+                                <converters:SubtractConverter />
+                            </Binding.Converter>
+                            <Binding.ConverterParameter>40</Binding.ConverterParameter>
+                        </Binding>
+                    </Border.Height>
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="PopupTransform" X="-250" />
+                    </Border.RenderTransform>
+                    <StackPanel>
+                        <Label Content="{Binding CurrentUser}"/>
+                        <Button Content="View Assets" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetsCommand}" />
+                        <Button Content="View Asset Assignments" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetAssignmentsCommand}" />
+                        <Button Content="View Asset Logs" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetLogsCommand}" />
+                    </StackPanel>
+                </Border>
+            </Popup>
+        </Grid>
+        <Button HorizontalAlignment="Right" Width="65" Height="35" Padding="5" Content="Logout" Command="{Binding LogoutCommand}" DockPanel.Dock="Right" />
     </DockPanel>
+
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="ToggleButton.Checked" SourceName="HamburgerButton">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="PopupTransform" Storyboard.TargetProperty="X" From="-250" To="0" Duration="0:0:0.25" />
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </UserControl.Triggers>
 
 </UserControl>

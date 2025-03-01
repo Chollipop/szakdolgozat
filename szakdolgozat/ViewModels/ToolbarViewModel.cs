@@ -12,6 +12,8 @@ namespace szakdolgozat.ViewModels
         public ICommand ViewAssetLogsCommand { get; }
         public ICommand LogoutCommand { get; }
 
+        public string CurrentUser => $"Current User: {AuthenticationService.Instance.CurrentUser.Username}";
+
         public ToolbarViewModel()
         {
             ViewAssetsCommand = new RelayCommand(ViewAssets);
