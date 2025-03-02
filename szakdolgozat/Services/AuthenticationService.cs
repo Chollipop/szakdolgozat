@@ -144,6 +144,139 @@ namespace szakdolgozat.Services
 
             return users;
         }
+
+        public List<string?> GetUserRoles()
+        {
+            var userRolesApiUrl = "https://graph.microsoft.com/v1.0/me/appRoleAssignments";
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, userRolesApiUrl);
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            try
+            {
+                var response = _httpClient.Send(requestMessage);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseBody = response.Content.ReadAsStringAsync().Result;
+                    var userRolesData = JsonConvert.DeserializeObject<UserRolesResponse>(responseBody);
+
+                    var roles = new List<string?>();
+
+                    if (userRolesData?.Value != null)
+                    {
+                        foreach (var role in userRolesData.Value)
+                        {
+                            var roleName = GetRoleNameByAppRoleId(role?.AppRoleId);
+                            roles.Add(roleName);
+                        }
+                    }
+
+                    return roles ?? [];
+                }
+                else
+                {
+                    return [];
+                }
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
+
+        private string? GetRoleNameByAppRoleId(string? appRoleId)
+        {
+            if (string.IsNullOrEmpty(appRoleId)) return null;
+
+            var rolesApiUrl = "https://graph.microsoft.com/v1.0/servicePrincipals/c5987c5b-4734-4797-989b-6e992b13394a?$select=appRoles";
+            var rolesRequestMessage = new HttpRequestMessage(HttpMethod.Get, rolesApiUrl);
+            rolesRequestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var response = _httpClient.Send(rolesRequestMessage);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseBody = response.Content.ReadAsStringAsync().Result;
+                var rolesData = JsonConvert.DeserializeObject<AppRolesResponse>(responseBody);
+
+                var role = rolesData?.Value?.FirstOrDefault(r => r.Id == appRoleId);
+                return role?.DisplayName;
+            }
+
+            return null;
+        }
+    }
+
+    public class UserRolesResponse
+    {
+        [JsonProperty("@odata.context")]
+        public string ODataContext { get; set; }
+
+        [JsonProperty("value")]
+        public List<AppRoleAssignment> Value { get; set; }
+    }
+
+    public class AppRoleAssignment
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
+        [JsonProperty("deletedDateTime")]
+        public DateTime? DeletedDateTime { get; set; }
+
+        [JsonProperty("appRoleId")]
+        public string AppRoleId { get; set; }
+
+        [JsonProperty("createdDateTime")]
+        public DateTime CreatedDateTime { get; set; }
+
+        [JsonProperty("principalDisplayName")]
+        public string PrincipalDisplayName { get; set; }
+
+        [JsonProperty("principalId")]
+        public string PrincipalId { get; set; }
+
+        [JsonProperty("principalType")]
+        public string PrincipalType { get; set; }
+
+        [JsonProperty("resourceDisplayName")]
+        public string ResourceDisplayName { get; set; }
+
+        [JsonProperty("resourceId")]
+        public string ResourceId { get; set; }
+    }
+
+    public class AppRolesResponse
+    {
+        [JsonProperty("@odata.context")]
+        public string ODataContext { get; set; }
+
+        [JsonProperty("appRoles")]
+        public List<AppRole> Value { get; set; }
+    }
+
+    public class AppRole
+    {
+        [JsonProperty("allowedMemberTypes")]
+        public List<string> AllowedMemberTypes { get; set; }
+
+        [JsonProperty("description")]
+        public string Description { get; set; }
+
+        [JsonProperty("displayName")]
+        public string DisplayName { get; set; }
+
+        [JsonProperty("id")]
+        public string Id { get; set; }
+
+        [JsonProperty("isEnabled")]
+        public bool IsEnabled { get; set; }
+
+        [JsonProperty("origin")]
+        public string Origin { get; set; }
+
+        [JsonProperty("value")]
+        public string Value { get; set; }
     }
 
     public class TokenCacheHelper
