@@ -35,7 +35,6 @@ namespace szakdolgozat.Services
             _appResourceId = Environment.GetEnvironmentVariable("APP_RESOURCE_ID");
 
             _authority = $"https://login.microsoftonline.com/{_tenantId}";
-            Debug.WriteLine(_authority);
 
             _publicClientApp = PublicClientApplicationBuilder.Create(_clientId)
                 .WithAuthority(_authority)
