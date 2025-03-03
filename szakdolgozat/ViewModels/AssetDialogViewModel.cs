@@ -190,7 +190,7 @@ namespace szakdolgozat.ViewModels
         public AssetDialogViewModel(Asset asset = null)
         {
             _asset = asset ?? new Asset();
-            Users = new ObservableCollection<UserProfile>(AuthenticationService.Instance.GetAllUsers());
+            Users = new ObservableCollection<UserProfile>(AuthenticationService.Instance.GetAllUsersAsync().Result);
             AssetTypes = new ObservableCollection<AssetType>(GetAllAssetTypes());
             StatusOptions = new ObservableCollection<string> { "Active", "Retired" };
 

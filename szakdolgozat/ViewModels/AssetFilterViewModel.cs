@@ -124,10 +124,7 @@ namespace szakdolgozat.ViewModels
             ApplyFilterCommand = new RelayCommand(ApplyFilter);
             ClearFilterCommand = new RelayCommand(ClearFilters);
             Owners = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
-            foreach (var owner in AuthenticationService.Instance.GetAllUsers())
-            {
-                Owners.Add(owner);
-            }
+            LoadOwnersAsync();
             AssetTypes = new ObservableCollection<AssetType> { new AssetType { TypeID = -1, TypeName = "" } };
             foreach (var assetType in GetAllAssetTypes())
             {
@@ -136,6 +133,15 @@ namespace szakdolgozat.ViewModels
             Statuses = new ObservableCollection<string> { "", "Active", "Retired" };
             SelectedStatus = Statuses[1];
             AssetListViewModel.AssetsChanged += OnAssetsChanged;
+        }
+
+        private async void LoadOwnersAsync()
+        {
+            var owners = await AuthenticationService.Instance.GetAllUsersAsync();
+            foreach (var owner in owners)
+            {
+                Owners.Add(owner);
+            }
         }
 
         private void OnAssetsChanged(object sender, EventArgs e)

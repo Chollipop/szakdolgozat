@@ -57,7 +57,7 @@ namespace szakdolgozat.Models
 
         public string GetOwnerFullName()
         {
-            return AuthenticationService.Instance.GetFullNameByGuid(new Guid(Owner));
+            return AuthenticationService.Instance.GetFullNameByGuidAsync(new Guid(Owner)).Result;
         }
     }
 }

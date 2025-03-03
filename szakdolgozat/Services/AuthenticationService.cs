@@ -1,15 +1,19 @@
 ﻿using Microsoft.Identity.Client;
 using Newtonsoft.Json;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Security.Cryptography;
+using DotNetEnv;
 
 namespace szakdolgozat.Services
 {
     public class AuthenticationService
     {
         private IPublicClientApplication _publicClientApp;
-        private string _clientId = "810cb99e-5e61-429d-add8-df1301eba977";
-        private string _tenantId = "e991da2b-1d0f-4946-9c2e-227b59ffe42e";
+        private string _clientId;
+        private string _tenantId;
+        private string _appResourceId;
         private string _authority;
 
         private HttpClient _httpClient;
@@ -24,7 +28,14 @@ namespace szakdolgozat.Services
 
         private AuthenticationService()
         {
+            Env.TraversePath().Load(".env");
+
+            _clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
+            _tenantId = Environment.GetEnvironmentVariable("TENANT_ID");
+            _appResourceId = Environment.GetEnvironmentVariable("APP_RESOURCE_ID");
+
             _authority = $"https://login.microsoftonline.com/{_tenantId}";
+            Debug.WriteLine(_authority);
 
             _publicClientApp = PublicClientApplicationBuilder.Create(_clientId)
                 .WithAuthority(_authority)
@@ -46,11 +57,11 @@ namespace szakdolgozat.Services
         {
             try
             {
-                var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.Read", "Directory.Read.All" }).ExecuteAsync();
+                var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.Read", "Directory.Read.All" }).ExecuteAsync().ConfigureAwait(false);
                 CurrentUser = result.Account;
                 AccessToken = result.AccessToken;
 
-                var sqlResult = await _publicClientApp.AcquireTokenSilent(new[] { "https://database.windows.net//.default" }, CurrentUser).ExecuteAsync();
+                var sqlResult = await _publicClientApp.AcquireTokenSilent(new[] { "https://database.windows.net//.default" }, CurrentUser).ExecuteAsync().ConfigureAwait(false);
                 SqlAccessToken = sqlResult.AccessToken;
 
                 if (!keepMeLoggedIn)
@@ -75,11 +86,11 @@ namespace szakdolgozat.Services
 
                 try
                 {
-                    var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.Read", "Directory.Read.All" }, firstAccount).ExecuteAsync();
+                    var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.Read", "Directory.Read.All" }, firstAccount).ExecuteAsync().ConfigureAwait(false);
                     CurrentUser = result.Account;
                     AccessToken = result.AccessToken;
 
-                    var sqlResult = await _publicClientApp.AcquireTokenSilent(new[] { "https://database.windows.net//.default" }, CurrentUser).ExecuteAsync();
+                    var sqlResult = await _publicClientApp.AcquireTokenSilent(new[] { "https://database.windows.net//.default" }, CurrentUser).ExecuteAsync().ConfigureAwait(false);
                     SqlAccessToken = sqlResult.AccessToken;
 
                     return true;
@@ -104,16 +115,16 @@ namespace szakdolgozat.Services
             }
         }
 
-        public string GetFullNameByGuid(Guid userGuid)
+        public async Task<string> GetFullNameByGuidAsync(Guid userGuid)
         {
             var userApiUrl = $"https://graph.microsoft.com/v1.0/users/{userGuid}";
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, userApiUrl);
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
-            var response = _httpClient.Send(requestMessage);
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
-                var responseBody = response.Content.ReadAsStringAsync().Result;
+                var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var userData = JsonConvert.DeserializeObject<UserProfile>(responseBody);
                 return userData?.DisplayName;
             }
@@ -121,7 +132,7 @@ namespace szakdolgozat.Services
             return "";
         }
 
-        public List<UserProfile> GetAllUsers()
+        public async Task<List<UserProfile>> GetAllUsersAsync()
         {
             var users = new List<UserProfile>();
             var userApiUrl = "https://graph.microsoft.com/v1.0/users";
@@ -129,11 +140,11 @@ namespace szakdolgozat.Services
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, userApiUrl);
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
 
-            var response = _httpClient.Send(requestMessage);
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
-                var responseBody = response.Content.ReadAsStringAsync().Result;
+                var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var userData = JsonConvert.DeserializeObject<UserListResponse>(responseBody);
 
                 if (userData?.Value != null)
@@ -145,7 +156,7 @@ namespace szakdolgozat.Services
             return users;
         }
 
-        public List<string?> GetUserRoles()
+        public async Task<List<string?>> GetUserRolesAsync()
         {
             var userRolesApiUrl = "https://graph.microsoft.com/v1.0/me/appRoleAssignments";
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, userRolesApiUrl);
@@ -153,11 +164,11 @@ namespace szakdolgozat.Services
 
             try
             {
-                var response = _httpClient.Send(requestMessage);
+                var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var responseBody = response.Content.ReadAsStringAsync().Result;
+                    var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     var userRolesData = JsonConvert.DeserializeObject<UserRolesResponse>(responseBody);
 
                     var roles = new List<string?>();
@@ -166,8 +177,8 @@ namespace szakdolgozat.Services
                     {
                         foreach (var role in userRolesData.Value)
                         {
-                            var roleName = GetRoleNameByAppRoleId(role?.AppRoleId);
-                            roles.Add(roleName);
+                            var roleName = await GetRoleNameByAppRoleIdAsync(role?.AppRoleId).ConfigureAwait(false);
+                            roles.Add(roleName?.ToLower());
                         }
                     }
 
@@ -184,19 +195,19 @@ namespace szakdolgozat.Services
             }
         }
 
-        private string? GetRoleNameByAppRoleId(string? appRoleId)
+        private async Task<string?> GetRoleNameByAppRoleIdAsync(string? appRoleId)
         {
             if (string.IsNullOrEmpty(appRoleId)) return null;
 
-            var rolesApiUrl = "https://graph.microsoft.com/v1.0/servicePrincipals/c5987c5b-4734-4797-989b-6e992b13394a?$select=appRoles";
+            var rolesApiUrl = $"https://graph.microsoft.com/v1.0/servicePrincipals/{_appResourceId}?$select=appRoles";
             var rolesRequestMessage = new HttpRequestMessage(HttpMethod.Get, rolesApiUrl);
             rolesRequestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
 
-            var response = _httpClient.Send(rolesRequestMessage);
+            var response = await _httpClient.SendAsync(rolesRequestMessage).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {
-                var responseBody = response.Content.ReadAsStringAsync().Result;
+                var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var rolesData = JsonConvert.DeserializeObject<AppRolesResponse>(responseBody);
 
                 var role = rolesData?.Value?.FirstOrDefault(r => r.Id == appRoleId);
@@ -298,7 +309,9 @@ namespace szakdolgozat.Services
         {
             if (File.Exists(_cacheFilePath))
             {
-                args.TokenCache.DeserializeMsalV3(File.ReadAllBytes(_cacheFilePath));
+                var encryptedData = File.ReadAllBytes(_cacheFilePath);
+                var decryptedData = ProtectedData.Unprotect(encryptedData, null, DataProtectionScope.CurrentUser);
+                args.TokenCache.DeserializeMsalV3(decryptedData);
             }
         }
 
@@ -306,7 +319,9 @@ namespace szakdolgozat.Services
         {
             if (args.HasStateChanged)
             {
-                File.WriteAllBytes(_cacheFilePath, args.TokenCache.SerializeMsalV3());
+                var data = args.TokenCache.SerializeMsalV3();
+                var encryptedData = ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser);
+                File.WriteAllBytes(_cacheFilePath, encryptedData);
             }
         }
     }

@@ -42,7 +42,7 @@ namespace szakdolgozat.Models
 
         public string GetUserFullName()
         {
-            return AuthenticationService.Instance.GetFullNameByGuid(new Guid(User));
+            return AuthenticationService.Instance.GetFullNameByGuidAsync(new Guid(User)).Result;
         }
     }
 }

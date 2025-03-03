@@ -111,7 +111,7 @@ namespace szakdolgozat.ViewModels
         {
             IsUpdating = assetAssignment == null;
             _assetAssignment = assetAssignment ?? new AssetAssignment();
-            Users = new ObservableCollection<UserProfile>(AuthenticationService.Instance.GetAllUsers());
+            Users = new ObservableCollection<UserProfile>(AuthenticationService.Instance.GetAllUsersAsync().Result);
             Assets = assignableAssets;
 
             if (_assetAssignment.User != null)

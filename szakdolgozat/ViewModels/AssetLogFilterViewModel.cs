@@ -79,11 +79,17 @@ namespace szakdolgozat.ViewModels
             ClearFilterCommand = new RelayCommand(ClearFilters);
 
             Users = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
-            foreach (var user in AuthenticationService.Instance.GetAllUsers())
+            LoadUsersAsync();
+            _assetLogViewModel.AssetLogsChangedReapplyFilters += OnAssetLogsChanged;
+        }
+
+        private async void LoadUsersAsync()
+        {
+            var users = await AuthenticationService.Instance.GetAllUsersAsync();
+            foreach (var user in users)
             {
                 Users.Add(user);
             }
-            _assetLogViewModel.AssetLogsChangedReapplyFilters += OnAssetLogsChanged;
         }
 
         private void OnAssetLogsChanged(object sender, EventArgs e)
