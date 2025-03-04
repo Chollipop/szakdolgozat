@@ -13,11 +13,11 @@
         <converters:RoleVisibilityConverter x:Key="RoleVisibilityConverter"/>
     </UserControl.Resources>
 
-    <DockPanel>
+    <DockPanel Background="LightGray">
         <Grid DockPanel.Dock="Left">
             <ToggleButton x:Name="HamburgerButton" Content="☰" Width="35" Height="35" />
             <Popup x:Name="HamburgerMenuPopup" IsOpen="{Binding ElementName=HamburgerButton, Path=IsChecked}" AllowsTransparency="True" StaysOpen="False" Placement="Relative" PlacementTarget="{Binding ElementName=HamburgerButton}" HorizontalOffset="-250">
-                <Border Background="#E6FFFFFF" Width="200" CornerRadius="0 15 15 0"
+                <Border Background="#D9D3D3D3" Width="200" CornerRadius="0 15 15 0"
                     Height="{Binding Path=ActualHeight, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource SubtractConverter}, ConverterParameter=40}">
                     <Border.RenderTransform>
                         <TranslateTransform x:Name="PopupTransform" X="-250" />
@@ -25,11 +25,13 @@
                     <StackPanel>
                         <TextBlock Text="{Binding CurrentUser}" TextWrapping="Wrap"/>
                         <Button Content="View Assets" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetsCommand}" 
-                            Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=admin}" />
-                        <Button Content="View Asset Assignments" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetAssignmentsCommand}" 
-                            Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=edit}" />
-                        <Button Content="View Asset Logs" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetLogsCommand}" 
                             Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=view}" />
+                        <Button Content="View Asset Assignments" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetAssignmentsCommand}" 
+                            Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=view}" />
+                        <Button Content="View Asset Logs" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetLogsCommand}" 
+                            Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=edit}" />
+                        <Button Content="Manage Users" Height="35" Padding="5" Margin="1" Command="{Binding ViewManageUsersCommand}" 
+                            Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=admin}" />
                     </StackPanel>
                 </Border>
             </Popup>

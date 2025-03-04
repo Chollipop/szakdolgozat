@@ -2,7 +2,13 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:szakdolgozat.Views"
-        xmlns:components="clr-namespace:szakdolgozat.Components">
+        xmlns:components="clr-namespace:szakdolgozat.Components"
+        xmlns:converters="clr-namespace:szakdolgozat.Converters">
+
+    <UserControl.Resources>
+        <converters:RoleVisibilityConverter x:Key="RoleVisibilityConverter"/>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -42,9 +48,9 @@
                     Grid.Row="2" 
                     Grid.Column="0">
             <Button Content="Add Assignment" Command="{Binding AddAssetAssignmentCommand}" 
-                    Width="120" Height="30" Margin="0,0,10,0" />
+                    Width="120" Height="30" Margin="0,0,10,0" Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=edit}" />
             <Button Content="Update Assignment" Command="{Binding UpdateAssetAssignmentCommand}" 
-                    Width="120" Height="30" Margin="0,0,10,0" />
+                    Width="120" Height="30" Margin="0,0,10,0" Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=edit}" />
         </StackPanel>
     </Grid>
 </UserControl>

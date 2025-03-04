@@ -51,6 +51,10 @@ namespace szakdolgozat.ViewModels
             {
                 WindowTitle = "Asset Logs";
             }
+            else if (CurrentViewModel is ManageUsersViewModel)
+            {
+                WindowTitle = "Manage Users";
+            }
         }
     }
 }

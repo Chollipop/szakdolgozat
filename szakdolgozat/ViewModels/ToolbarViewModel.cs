@@ -10,6 +10,7 @@ namespace szakdolgozat.ViewModels
         public ICommand ViewAssetsCommand { get; }
         public ICommand ViewAssetAssignmentsCommand { get; }
         public ICommand ViewAssetLogsCommand { get; }
+        public ICommand ViewManageUsersCommand { get; }
         public ICommand LogoutCommand { get; }
 
         public string CurrentUser => $"Current User: {AuthenticationService.Instance.CurrentUser.Username}";
@@ -19,6 +20,7 @@ namespace szakdolgozat.ViewModels
             ViewAssetsCommand = new RelayCommand(ViewAssets);
             ViewAssetAssignmentsCommand = new RelayCommand(ViewAssetAssignments);
             ViewAssetLogsCommand = new RelayCommand(ViewAssetLogs);
+            ViewManageUsersCommand = new RelayCommand(ViewManageUsers);
             LogoutCommand = new RelayCommand(Logout);
         }
 
@@ -37,6 +39,12 @@ namespace szakdolgozat.ViewModels
         private void ViewAssetLogs()
         {
             navigationService = new NavigationService<AssetLogViewModel>(() => App.ServiceProvider.GetRequiredService<AssetLogViewModel>());
+            navigationService.Navigate();
+        }
+
+        private void ViewManageUsers()
+        {
+            navigationService = new NavigationService<ManageUsersViewModel>(() => App.ServiceProvider.GetRequiredService<ManageUsersViewModel>());
             navigationService.Navigate();
         }
 

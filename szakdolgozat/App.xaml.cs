@@ -41,6 +41,7 @@ namespace szakdolgozat
             services.AddSingleton<AssetFilterViewModel>();
             services.AddSingleton<AssetAssignmentFilterViewModel>();
             services.AddSingleton<AssetLogFilterViewModel>();
+            services.AddSingleton<ManageUsersViewModel>();
 
             services.AddSingleton<MainWindow>(x => new MainWindow()
             {
@@ -54,6 +55,7 @@ namespace szakdolgozat
             services.AddSingleton<AssetFilter>();
             services.AddSingleton<AssetAssignmentFilter>();
             services.AddSingleton<AssetLogFilter>();
+            services.AddSingleton<ManageUsersView>();
         }
 
         private INavigationService CreateLoginNavigationService(IServiceProvider serviceProvider)

@@ -18,6 +18,9 @@
         <DataTemplate DataType="{x:Type vm:AssetLogViewModel}">
             <v:AssetLogView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ManageUsersViewModel}">
+            <v:ManageUsersView />
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <ContentControl Content="{Binding CurrentViewModel}" />

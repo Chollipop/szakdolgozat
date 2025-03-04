@@ -1,10 +1,10 @@
-﻿using Microsoft.Identity.Client;
+﻿using DotNetEnv;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
-using DotNetEnv;
+using System.Text.RegularExpressions;
 
 namespace szakdolgozat.Services
 {
@@ -155,9 +155,18 @@ namespace szakdolgozat.Services
             return users;
         }
 
-        public async Task<List<string?>> GetUserRolesAsync()
+        public async Task<List<string?>> GetUserRolesAsync(string id = "")
         {
-            var userRolesApiUrl = "https://graph.microsoft.com/v1.0/me/appRoleAssignments";
+            var userRolesApiUrl = "";
+            if (string.IsNullOrEmpty(id))
+            {
+                userRolesApiUrl = "https://graph.microsoft.com/v1.0/me/appRoleAssignments";
+            }
+            else
+            {
+                userRolesApiUrl = $"https://graph.microsoft.com/v1.0/users/{id}/appRoleAssignments";
+            }
+
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, userRolesApiUrl);
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
 
@@ -332,6 +341,30 @@ namespace szakdolgozat.Services
 
         [JsonProperty("displayName")]
         public string DisplayName { get; set; }
+
+        private string _email;
+
+        [JsonProperty("userPrincipalName")]
+        public string Email
+        {
+            get => _email;
+            set => _email = ExtractEmail(value);
+        }
+
+        public string GetRole()
+        {
+            return char.ToUpper(AuthenticationService.Instance.GetUserRolesAsync(Id).Result[0][0]) + AuthenticationService.Instance.GetUserRolesAsync(Id).Result[0].Substring(1);
+        }
+
+        private string ExtractEmail(string userPrincipalName)
+        {
+            if (userPrincipalName.Contains("#EXT#"))
+            {
+                var match = Regex.Match(userPrincipalName, @"^(.*?)(#EXT#)?@");
+                return match.Success ? match.Groups[1].Value.Replace("_", "@") : userPrincipalName;
+            }
+            return userPrincipalName;
+        }
     }
 
     public class UserListResponse
