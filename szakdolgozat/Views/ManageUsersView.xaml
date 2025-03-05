@@ -2,10 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:szakdolgozat.Views"
+        xmlns:converters="clr-namespace:szakdolgozat.Converters"
         xmlns:components="clr-namespace:szakdolgozat.Components">
-    
+
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:MultiStringLengthToBooleanConverter x:Key="MultiStringLengthToBooleanConverter"/>
 
         <Style x:Key="PlaceholderTextBoxStyle" TargetType="TextBox">
             <Setter Property="BorderBrush" Value="Gray"/>
@@ -73,10 +75,17 @@
             Grid.Row="1" 
             Grid.Column="1" 
             Margin="10,20,10,10">
-            <TextBox x:Name="NewUserEmailTextBox" Tag="E-mail Address" Style="{StaticResource PlaceholderTextBoxStyle}" Margin="0,0,0,10" HorizontalAlignment="Stretch"/>
+            <TextBox x:Name="NewUserEmailTextBox" BorderBrush="{Binding BorderBrush}" Text="{Binding InviteEmailText, UpdateSourceTrigger=PropertyChanged}" Tag="E-mail Address" Style="{StaticResource PlaceholderTextBoxStyle}" Margin="0,0,0,10" HorizontalAlignment="Stretch"/>
             <WrapPanel HorizontalAlignment="Center">
-                <Button Content="Invite User" Command="{Binding}" Width="120" Height="30" Margin="0,0,10,10"/>
-                <Button Content="Bulk Invite From CSV" Command="{Binding}" Width="120" Height="30" Margin="0,0,10,10"/>
+                <Button Content="Invite User" Command="{Binding InviteUserCommand}" Width="120" Height="30" Margin="0,0,10,10">
+                    <Button.IsEnabled>
+                        <MultiBinding Converter="{StaticResource MultiStringLengthToBooleanConverter}">
+                            <Binding ElementName="NewUserEmailTextBox" Path="Text"/>
+                            <Binding Path="IsInputValid"/>
+                        </MultiBinding>
+                    </Button.IsEnabled>
+                </Button>
+                <Button Content="Bulk Invite From CSV" Command="{Binding BulkInviteCommand}" Width="120" Height="30" Margin="0,0,10,10"/>
             </WrapPanel>
         </StackPanel>
 

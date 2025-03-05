@@ -1,10 +1,15 @@
 ﻿using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace szakdolgozat.Services
 {
@@ -20,6 +25,8 @@ namespace szakdolgozat.Services
 
         private string _cacheFilePath = "msal_cache.json";
 
+        private Dictionary<string, string> _roleIds = [];
+
         public static AuthenticationService Instance { get; } = new AuthenticationService();
 
         public IAccount CurrentUser { get; private set; }
@@ -33,6 +40,9 @@ namespace szakdolgozat.Services
             _clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
             _tenantId = Environment.GetEnvironmentVariable("TENANT_ID");
             _appResourceId = Environment.GetEnvironmentVariable("APP_RESOURCE_ID");
+            _roleIds.Add("Admin", Environment.GetEnvironmentVariable("ADMIN_ROLE_ID"));
+            _roleIds.Add("Edit", Environment.GetEnvironmentVariable("EDIT_ROLE_ID"));
+            _roleIds.Add("View", Environment.GetEnvironmentVariable("VIEW_ROLE_ID"));
 
             _authority = $"https://login.microsoftonline.com/{_tenantId}";
 
@@ -56,7 +66,7 @@ namespace szakdolgozat.Services
         {
             try
             {
-                var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.Read", "Directory.Read.All" }).ExecuteAsync().ConfigureAwait(false);
+                var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.Read", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All" }).ExecuteAsync().ConfigureAwait(false);
                 CurrentUser = result.Account;
                 AccessToken = result.AccessToken;
 
@@ -70,7 +80,7 @@ namespace szakdolgozat.Services
 
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -85,7 +95,7 @@ namespace szakdolgozat.Services
 
                 try
                 {
-                    var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.Read", "Directory.Read.All" }, firstAccount).ExecuteAsync().ConfigureAwait(false);
+                    var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.Read", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All" }, firstAccount).ExecuteAsync().ConfigureAwait(false);
                     CurrentUser = result.Account;
                     AccessToken = result.AccessToken;
 
@@ -94,7 +104,7 @@ namespace szakdolgozat.Services
 
                     return true;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return false;
                 }
@@ -224,6 +234,222 @@ namespace szakdolgozat.Services
 
             return null;
         }
+
+        public async Task<bool> AssignAppRoleToUserAsync(string userIdOrUPN, string appRole)
+        {
+            RemoveAllAppRoleAssignments(userIdOrUPN);
+            string appRoleId = _roleIds[appRole];
+            var apiUrl = $"https://graph.microsoft.com/v1.0/users/{userIdOrUPN}/appRoleAssignments";
+
+            var requestBody = new
+            {
+                principalId = userIdOrUPN,
+                appRoleId = appRoleId,
+                resourceId = _appResourceId
+            };
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+            {
+                Content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json")
+            };
+
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public bool RemoveAllAppRoleAssignments(string userId)
+        {
+            var appRoleAssignments = GetAppRoleAssignmentsAsync(userId).Result;
+
+            foreach (var assignment in appRoleAssignments)
+            {
+                var isRemoved = RemoveAppRoleAssignmentAsync(userId, assignment.Id).Result;
+
+                if (!isRemoved)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public async Task<List<AppRoleAssignment>> GetAppRoleAssignmentsAsync(string userId)
+        {
+            var apiUrl = $"https://graph.microsoft.com/v1.0/users/{userId}/appRoleAssignments";
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var userRolesResponse = JsonConvert.DeserializeObject<UserRolesResponse>(responseBody);
+
+                return userRolesResponse?.Value ?? [];
+            }
+
+            return [];
+        }
+
+
+        public async Task<bool> RemoveAppRoleAssignmentAsync(string userId, string appRoleAssignmentId)
+        {
+            var apiUrl = $"https://graph.microsoft.com/v1.0/users/{userId}/appRoleAssignments/{appRoleAssignmentId}";
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Delete, apiUrl);
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            return response.IsSuccessStatusCode;
+        }
+
+
+        public async Task<bool> RevokeSignInSessionsAsync(string userIdOrUPN)
+        {
+            var apiUrl = $"https://graph.microsoft.com/v1.0/users/{userIdOrUPN}/revokeSignInSessions";
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+            {
+                Headers = { Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken) }
+            };
+
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> SendInvitationAsync(string invitedUserEmailAddress)
+        {
+            var allUsers = await GetAllUsersAsync().ConfigureAwait(false);
+            if (allUsers.Any(user => user.Email == invitedUserEmailAddress))
+            {
+                return false;
+            }
+
+            string inviteRedirectUrl = $"https://myapplications.microsoft.com/?tenantid={_tenantId}";
+            var apiUrl = "https://graph.microsoft.com/v1.0/invitations";
+
+            var requestBody = new
+            {
+                invitedUserEmailAddress = invitedUserEmailAddress,
+                inviteRedirectUrl = inviteRedirectUrl,
+                invitedUserType = "Member"
+            };
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+            {
+                Content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json")
+            };
+
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            //if (response.IsSuccessStatusCode)
+            //{
+            //    string? invitedUserId = allUsers.FirstOrDefault(user => user.Email == invitedUserEmailAddress)?.Id;
+            //    if (invitedUserId != null && await AssignAppRoleToUserAsync(invitedUserId, "View").ConfigureAwait(false))
+            //    {
+            //        if (await AssignRoleToUserAsync(invitedUserId).ConfigureAwait(false))
+            //        {
+            //            if (await AddAzureAdUserAsync(invitedUserEmailAddress).ConfigureAwait(false))
+            //            {
+            //                return true;
+            //            }
+            //            else
+            //            {
+            //                await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
+            //                return false;
+            //            }
+            //        }
+            //        else
+            //        {
+            //            await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
+            //            return false;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
+            //        return false;
+            //    }
+            //}
+            //else
+            //{
+            //    return false;
+            //}
+            return false;
+        }
+
+        public async Task<bool> AddAzureAdUserAsync(string azureAdUserEmail)
+        {
+            using (var scope = App.ServiceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
+
+                string userEmailWithBrackets = $"[{azureAdUserEmail}]";
+
+                string createUserSql = $"CREATE USER {userEmailWithBrackets} FROM EXTERNAL PROVIDER;";
+                string addDbReaderRoleSql = $"ALTER ROLE db_datareader ADD MEMBER {userEmailWithBrackets};";
+                string addDbWriterRoleSql = $"ALTER ROLE db_datawriter ADD MEMBER {userEmailWithBrackets};";
+
+                try
+                {
+                    await context.Database.ExecuteSqlRawAsync(createUserSql);
+                    await context.Database.ExecuteSqlRawAsync(addDbReaderRoleSql);
+                    await context.Database.ExecuteSqlRawAsync(addDbWriterRoleSql);
+
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+        }
+
+        //public async Task<bool> AssignRoleToUserAsync(string principalId)
+        //{
+        //    var apiUrl = "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments";
+
+        //    var requestBody = new
+        //    {
+        //        @odata_type = "#microsoft.graph.unifiedRoleAssignment",
+        //        roleDefinitionId = "fe930be7-5e62-47db-91af-98c3a49a38b1",
+        //        principalId = principalId,               
+        //        directoryScopeId = "/"
+        //    };
+
+        //    var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+        //    {
+        //        Content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json")
+        //    };
+
+        //    requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+        //    var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+        //    MessageBox.Show(response.Content.ReadAsStringAsync().Result);
+        //    return response.IsSuccessStatusCode;
+        //}
+
+        //public async Task<bool> DeleteUserAsync(string userIdOrUPN)
+        //{
+        //    var apiUrl = $"https://graph.microsoft.com/v1.0/users/{userIdOrUPN}";
+
+        //    var requestMessage = new HttpRequestMessage(HttpMethod.Delete, apiUrl);
+        //    requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+        //    var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+        //    Debug.WriteLine(response.Content.ReadAsStringAsync().Result);
+        //    return response.IsSuccessStatusCode;
+        //}
     }
 
     public class UserRolesResponse
