@@ -49,6 +49,7 @@
 
         <DataGrid x:Name="UserDataGrid" 
           ItemsSource="{Binding Users}"
+          SelectedItem="{Binding SelectedUser}"
           AutoGenerateColumns="False" 
           CanUserAddRows="False"
           IsReadOnly="True"
@@ -96,6 +97,7 @@
             Grid.Row="2" 
             Grid.Column="0">
             <Button Content="Save Changes" Command="{Binding SaveChangesCommand}" IsEnabled="{Binding CanSaveChanges}" Width="120" Height="30" Margin="0,0,10,0"/>
+            <Button Content="Delete User" Command="{Binding DeleteUserCommand}" Width="120" Height="30" Margin="0,0,10,0"/>
         </StackPanel>
     </Grid>
 </UserControl>

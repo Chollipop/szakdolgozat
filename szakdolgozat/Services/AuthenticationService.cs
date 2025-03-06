@@ -459,6 +459,48 @@ namespace szakdolgozat.Services
 
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<bool> DeleteRoleAssignmentAsync(string roleAssignmentId)
+        {
+            var apiUrl = $"https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments/{roleAssignmentId}";
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Delete, apiUrl);
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<string> GetRoleAssignmentIdByPrincipalIdAsync(string principalId)
+        {
+            var apiUrl = "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments";
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                string jsonResponse = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                JObject data = JObject.Parse(jsonResponse);
+                JArray assignments = (JArray)data["value"];
+
+                var match = assignments
+                    .OfType<JObject>()
+                    .FirstOrDefault(a => a["principalId"] != null && a["principalId"].ToString() == principalId);
+
+                if (match != null)
+                {
+                    string id = match["id"]?.ToString();
+                    return id;
+                }
+            }
+
+            return null;
+        }
+
     }
 
     public class UserRolesResponse
