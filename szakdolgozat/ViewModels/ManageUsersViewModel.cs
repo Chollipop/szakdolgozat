@@ -79,7 +79,19 @@ namespace szakdolgozat.ViewModels
             Roles = new ObservableCollection<string> { "Admin", "Edit", "View" };
             OnPropertyChanged(nameof(Roles));
 
-            var userProfiles = AuthenticationService.Instance.GetAllUsersAsync().Result;
+            _ = UpdateUsersAsync();
+
+            Users.CollectionChanged += (sender, e) => OnPropertyChanged(nameof(CanSaveChanges));
+
+            SaveChangesCommand = new RelayCommand(SaveChanges);
+            InviteUserCommand = new RelayCommand(InviteUser);
+            BulkInviteCommand = new RelayCommand(BulkInvite);
+        }
+
+        private async Task UpdateUsersAsync()
+        {
+            var userProfiles = await AuthenticationService.Instance.GetAllUsersAsync();
+            Users.Clear();
             foreach (var userProfile in userProfiles)
             {
                 if (userProfile.Email == AuthenticationService.Instance.CurrentUser.Username)
@@ -101,12 +113,6 @@ namespace szakdolgozat.ViewModels
                 user.CurrentRoleChanged += (sender, e) => OnPropertyChanged(nameof(CanSaveChanges));
             }
             OnPropertyChanged(nameof(Users));
-
-            Users.CollectionChanged += (sender, e) => OnPropertyChanged(nameof(CanSaveChanges));
-
-            SaveChangesCommand = new RelayCommand(SaveChanges);
-            InviteUserCommand = new RelayCommand(InviteUser);
-            BulkInviteCommand = new RelayCommand(BulkInvite);
         }
 
         private bool IsValidEmail(string email)
@@ -166,6 +172,8 @@ namespace szakdolgozat.ViewModels
             {
                 MessageBox.Show("Error sending invitation.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
+            _ = UpdateUsersAsync();
         }
 
         public void BulkInvite()

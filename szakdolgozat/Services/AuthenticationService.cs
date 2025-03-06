@@ -3,13 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
-using System.Diagnostics;
+using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows;
 
 namespace szakdolgozat.Services
 {
@@ -43,6 +42,7 @@ namespace szakdolgozat.Services
             _roleIds.Add("Admin", Environment.GetEnvironmentVariable("ADMIN_ROLE_ID"));
             _roleIds.Add("Edit", Environment.GetEnvironmentVariable("EDIT_ROLE_ID"));
             _roleIds.Add("View", Environment.GetEnvironmentVariable("VIEW_ROLE_ID"));
+            _roleIds.Add("GlobalAdmin", Environment.GetEnvironmentVariable("GLOBAL_ADMIN_ROLE_ID"));
 
             _authority = $"https://login.microsoftonline.com/{_tenantId}";
 
@@ -66,7 +66,7 @@ namespace szakdolgozat.Services
         {
             try
             {
-                var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.Read", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All" }).ExecuteAsync().ConfigureAwait(false);
+                var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.ReadWrite.All", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All", "RoleManagement.ReadWrite.Directory" }).ExecuteAsync().ConfigureAwait(false);
                 CurrentUser = result.Account;
                 AccessToken = result.AccessToken;
 
@@ -95,7 +95,7 @@ namespace szakdolgozat.Services
 
                 try
                 {
-                    var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.Read", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All" }, firstAccount).ExecuteAsync().ConfigureAwait(false);
+                    var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.ReadWrite.All", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All", "RoleManagement.ReadWrite.Directory" }, firstAccount).ExecuteAsync().ConfigureAwait(false);
                     CurrentUser = result.Account;
                     AccessToken = result.AccessToken;
 
@@ -328,10 +328,7 @@ namespace szakdolgozat.Services
         public async Task<bool> SendInvitationAsync(string invitedUserEmailAddress)
         {
             var allUsers = await GetAllUsersAsync().ConfigureAwait(false);
-            if (allUsers.Any(user => user.Email == invitedUserEmailAddress))
-            {
-                return false;
-            }
+            if (allUsers.Any(user => user.Email == invitedUserEmailAddress)) return false;
 
             string inviteRedirectUrl = $"https://myapplications.microsoft.com/?tenantid={_tenantId}";
             var apiUrl = "https://graph.microsoft.com/v1.0/invitations";
@@ -339,8 +336,7 @@ namespace szakdolgozat.Services
             var requestBody = new
             {
                 invitedUserEmailAddress = invitedUserEmailAddress,
-                inviteRedirectUrl = inviteRedirectUrl,
-                invitedUserType = "Member"
+                inviteRedirectUrl = inviteRedirectUrl
             };
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
@@ -351,41 +347,41 @@ namespace szakdolgozat.Services
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
 
             var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+            JObject jsonObject = JObject.Parse(response.Content.ReadAsStringAsync().Result);
+            string invitedUserId = jsonObject.SelectToken("invitedUser.id").ToString();
 
-            //if (response.IsSuccessStatusCode)
-            //{
-            //    string? invitedUserId = allUsers.FirstOrDefault(user => user.Email == invitedUserEmailAddress)?.Id;
-            //    if (invitedUserId != null && await AssignAppRoleToUserAsync(invitedUserId, "View").ConfigureAwait(false))
-            //    {
-            //        if (await AssignRoleToUserAsync(invitedUserId).ConfigureAwait(false))
-            //        {
-            //            if (await AddAzureAdUserAsync(invitedUserEmailAddress).ConfigureAwait(false))
-            //            {
-            //                return true;
-            //            }
-            //            else
-            //            {
-            //                await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
-            //                return false;
-            //            }
-            //        }
-            //        else
-            //        {
-            //            await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
-            //            return false;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
-            //        return false;
-            //    }
-            //}
-            //else
-            //{
-            //    return false;
-            //}
-            return false;
+            if (response.IsSuccessStatusCode)
+            {
+                if (AssignAppRoleToUserAsync(invitedUserId, "View").Result)
+                {
+                    if (AddAzureAdUserAsync(invitedUserEmailAddress).Result)
+                    {
+                        if (AssignRoleToUserAsync(invitedUserId).Result)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
+                        return false;
+                    }
+                }
+                else
+                {
+                    await DeleteUserAsync(invitedUserId).ConfigureAwait(false);
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public async Task<bool> AddAzureAdUserAsync(string azureAdUserEmail)
@@ -400,56 +396,69 @@ namespace szakdolgozat.Services
                 string addDbReaderRoleSql = $"ALTER ROLE db_datareader ADD MEMBER {userEmailWithBrackets};";
                 string addDbWriterRoleSql = $"ALTER ROLE db_datawriter ADD MEMBER {userEmailWithBrackets};";
 
-                try
+                while (true)
                 {
-                    await context.Database.ExecuteSqlRawAsync(createUserSql);
-                    await context.Database.ExecuteSqlRawAsync(addDbReaderRoleSql);
-                    await context.Database.ExecuteSqlRawAsync(addDbWriterRoleSql);
+                    try
+                    {
+                        await context.Database.ExecuteSqlRawAsync(createUserSql);
+                        await context.Database.ExecuteSqlRawAsync(addDbReaderRoleSql);
+                        await context.Database.ExecuteSqlRawAsync(addDbWriterRoleSql);
 
-                    return true;
-                }
-                catch (Exception)
-                {
-                    return false;
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message.Contains("Principal") && ex.Message.Contains("could not be found or this principal type is not supported"))
+                        {
+                            await Task.Delay(1000);
+                        }
+                        else if (ex.Message.Contains("User, group, or role") && ex.Message.Contains("already exists in the current database"))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
                 }
             }
         }
 
-        //public async Task<bool> AssignRoleToUserAsync(string principalId)
-        //{
-        //    var apiUrl = "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments";
+        public async Task<bool> AssignRoleToUserAsync(string principalId)
+        {
+            var apiUrl = "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments";
 
-        //    var requestBody = new
-        //    {
-        //        @odata_type = "#microsoft.graph.unifiedRoleAssignment",
-        //        roleDefinitionId = "fe930be7-5e62-47db-91af-98c3a49a38b1",
-        //        principalId = principalId,               
-        //        directoryScopeId = "/"
-        //    };
+            var requestBody = new
+            {
+                @odata_type = "#microsoft.graph.unifiedRoleAssignment",
+                roleDefinitionId = _roleIds["GlobalAdmin"],
+                principalId = principalId,
+                directoryScopeId = "/"
+            };
 
-        //    var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
-        //    {
-        //        Content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json")
-        //    };
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+            {
+                Content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json")
+            };
 
-        //    requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
 
-        //    var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
-        //    MessageBox.Show(response.Content.ReadAsStringAsync().Result);
-        //    return response.IsSuccessStatusCode;
-        //}
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
 
-        //public async Task<bool> DeleteUserAsync(string userIdOrUPN)
-        //{
-        //    var apiUrl = $"https://graph.microsoft.com/v1.0/users/{userIdOrUPN}";
+        public async Task<bool> DeleteUserAsync(string userIdOrUPN)
+        {
+            var apiUrl = $"https://graph.microsoft.com/v1.0/users/{userIdOrUPN}";
 
-        //    var requestMessage = new HttpRequestMessage(HttpMethod.Delete, apiUrl);
-        //    requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+            var requestMessage = new HttpRequestMessage(HttpMethod.Delete, apiUrl);
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
 
-        //    var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
-        //    Debug.WriteLine(response.Content.ReadAsStringAsync().Result);
-        //    return response.IsSuccessStatusCode;
-        //}
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            return response.IsSuccessStatusCode;
+        }
     }
 
     public class UserRolesResponse

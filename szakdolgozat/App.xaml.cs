@@ -33,30 +33,30 @@ namespace szakdolgozat
             services.AddSingleton<NavigationStore>();
             services.AddSingleton<INavigationService>(x => CreateLoginNavigationService(x));
 
-            services.AddSingleton<MainWindowViewModel>();
-            services.AddSingleton<LoginViewModel>();
-            services.AddSingleton<AssetListViewModel>();
-            services.AddSingleton<AssetAssignmentListViewModel>();
-            services.AddSingleton<AssetLogViewModel>();
+            services.AddTransient<MainWindowViewModel>();
+            services.AddTransient<LoginViewModel>();
+            services.AddTransient<AssetListViewModel>();
+            services.AddTransient<AssetAssignmentListViewModel>();
+            services.AddTransient<AssetLogViewModel>();
             services.AddSingleton<AssetFilterViewModel>();
             services.AddSingleton<AssetAssignmentFilterViewModel>();
             services.AddSingleton<AssetLogFilterViewModel>();
-            services.AddSingleton<ManageUsersViewModel>();
+            services.AddTransient<ManageUsersViewModel>();
 
-            services.AddSingleton<MainWindow>(x => new MainWindow()
+            services.AddTransient<MainWindow>(x => new MainWindow()
             {
                 DataContext = x.GetRequiredService<MainWindowViewModel>(),
                 WindowState = WindowState.Maximized
             });
-            services.AddSingleton<LoginView>();
-            services.AddSingleton<AssetListView>();
-            services.AddSingleton<AssetAssignmentListView>();
-            services.AddSingleton<AssetLogView>();
-            services.AddSingleton<AssetFilter>();
-            services.AddSingleton<AssetAssignmentFilter>();
-            services.AddSingleton<AssetLogFilter>();
-            services.AddSingleton<ManageUsersView>();
-        }
+            services.AddTransient<LoginView>();
+            services.AddTransient<AssetListView>();
+            services.AddTransient<AssetAssignmentListView>();
+            services.AddTransient<AssetLogView>();
+            services.AddTransient<AssetFilter>();
+            services.AddTransient<AssetAssignmentFilter>();
+            services.AddTransient<AssetLogFilter>();
+            services.AddTransient<ManageUsersView>();
+        }   
 
         private INavigationService CreateLoginNavigationService(IServiceProvider serviceProvider)
         {
