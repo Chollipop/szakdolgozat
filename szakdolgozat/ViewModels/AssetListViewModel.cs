@@ -49,6 +49,7 @@ namespace szakdolgozat.ViewModels
                 var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
                 var assetsList = await context.Assets
                     .Include(a => a.AssetType)
+                    .Include(a => a.Subtype)
                     .Where(a => a.Status == "Active")
                     .Select(a => new Asset
                     {
@@ -56,6 +57,8 @@ namespace szakdolgozat.ViewModels
                         AssetName = a.AssetName,
                         AssetTypeID = a.AssetTypeID,
                         AssetType = a.AssetType,
+                        SubtypeID = a.SubtypeID,
+                        Subtype = a.Subtype,
                         Owner = a.Owner,
                         Location = a.Location,
                         PurchaseDate = a.PurchaseDate,
@@ -86,6 +89,18 @@ namespace szakdolgozat.ViewModels
                     {
                         context.AssetTypes.Attach(newAsset.AssetType);
                     }
+
+                    if (newAsset.Subtype?.TypeID == -1)
+                    {
+
+                        newAsset.SubtypeID = null;
+                        newAsset.Subtype = null;
+                    }
+                    else
+                    {
+                        context.Subtypes.Attach(newAsset.Subtype);
+                    }
+
                     context.Assets.Add(newAsset);
 
                     await context.SaveChangesAsync();
@@ -125,6 +140,16 @@ namespace szakdolgozat.ViewModels
                         SelectedAsset.AssetName = updatedAsset.AssetName;
                         SelectedAsset.AssetTypeID = updatedAsset.AssetTypeID;
                         SelectedAsset.AssetType = updatedAsset.AssetType;
+                        if (updatedAsset.SubtypeID == -1)
+                        {
+                            SelectedAsset.SubtypeID = null;
+                            SelectedAsset.Subtype = null;
+                        }
+                        else
+                        {
+                            SelectedAsset.SubtypeID = updatedAsset.SubtypeID;
+                            SelectedAsset.Subtype = updatedAsset.Subtype;
+                        }
                         SelectedAsset.Owner = updatedAsset.Owner;
                         SelectedAsset.Location = updatedAsset.Location;
                         SelectedAsset.PurchaseDate = updatedAsset.PurchaseDate;
@@ -216,7 +241,7 @@ namespace szakdolgozat.ViewModels
                 return SelectedAsset.Status != "Retired" && !hasAssignments;
             }
         }
-        
+
         protected virtual void OnAssetsChanged()
         {
             AssetsChanged?.Invoke(this, EventArgs.Empty);
@@ -226,7 +251,7 @@ namespace szakdolgozat.ViewModels
         {
             AssetLogsChanged?.Invoke(this, EventArgs.Empty);
         }
-        
+
         public void NotifyAssetsChanged()
         {
             OnPropertyChanged(nameof(Assets));

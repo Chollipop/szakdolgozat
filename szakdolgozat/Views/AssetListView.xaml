@@ -34,6 +34,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Asset Name" Binding="{Binding AssetName}" />
                 <DataGridTextColumn Header="Asset Type" Binding="{Binding AssetType.TypeName}" />
+                <DataGridTextColumn Header="Subtype" Binding="{Binding Subtype.TypeName}" />
                 <DataGridTextColumn Header="Owner" Binding="{Binding OwnerFullName}" />
                 <DataGridTextColumn Header="Location" Binding="{Binding Location}" />
                 <DataGridTextColumn Header="Purchase Date" Binding="{Binding PurchaseDate, StringFormat=\{0:yyyy.MM.dd\}}" />

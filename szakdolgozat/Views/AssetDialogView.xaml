@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:szakdolgozat.Views"
         xmlns:converters="clr-namespace:szakdolgozat.Converters"
-        Title="" Height="545" Width="400" MaxHeight="545" MaxWidth="400" MinHeight="545" MinWidth="400">
+        Title="" Height="545" Width="400" MaxHeight="590" MaxWidth="400" MinHeight="590" MinWidth="400">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <converters:MultiStringLengthToBooleanConverter x:Key="MultiStringLengthToBooleanConverter"/>
@@ -38,6 +38,9 @@
             
             <TextBlock Text="Asset Type" Margin="0,0,0,5"/>
             <ComboBox ItemsSource="{Binding AssetTypes}" Margin="0,0,0,10" DisplayMemberPath="TypeName" SelectedItem="{Binding SelectedAssetType}" />
+            
+            <TextBlock Text="Subtype" Margin="0,0,0,5"/>
+            <ComboBox ItemsSource="{Binding Subtypes}" Margin="0,0,0,10" DisplayMemberPath="TypeName" SelectedItem="{Binding SelectedSubtype}" />
             
             <TextBlock Text="Owner" Margin="0,0,0,5"/>
             <ComboBox ItemsSource="{Binding Users}" Margin="0,0,0,10" DisplayMemberPath="DisplayName" SelectedItem="{Binding SelectedUser}" />

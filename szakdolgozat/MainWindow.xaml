@@ -21,6 +21,9 @@
         <DataTemplate DataType="{x:Type vm:ManageUsersViewModel}">
             <v:ManageUsersView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SubtypesViewModel}">
+            <v:SubtypesView />
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <ContentControl Content="{Binding CurrentViewModel}" />

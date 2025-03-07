@@ -19,6 +19,7 @@ namespace szakdolgozat.ViewModels
 
         public ObservableCollection<UserProfile> Users { get; set; }
         public ObservableCollection<AssetType> AssetTypes { get; set; }
+        public ObservableCollection<Subtype> Subtypes { get; set; }
         public ObservableCollection<string> StatusOptions { get; set; }
 
         public Asset Asset
@@ -48,6 +49,16 @@ namespace szakdolgozat.ViewModels
             {
                 _asset.AssetType = value;
                 OnPropertyChanged(nameof(AssetType));
+            }
+        }
+        
+        public Subtype Subtype
+        {
+            get => _asset.Subtype;
+            set
+            {
+                _asset.Subtype = value;
+                OnPropertyChanged(nameof(Subtype));
             }
         }
 
@@ -184,6 +195,16 @@ namespace szakdolgozat.ViewModels
             }
         }
 
+        public Subtype SelectedSubtype
+        {
+            get => Subtypes.FirstOrDefault(st => st == _asset.Subtype);
+            set
+            {
+                _asset.Subtype = value;
+                OnPropertyChanged(nameof(SelectedSubtype));
+            }
+        }
+
         public ICommand SubmitCommand { get; }
         public ICommand CancelCommand { get; }
 
@@ -192,6 +213,8 @@ namespace szakdolgozat.ViewModels
             _asset = asset ?? new Asset();
             Users = new ObservableCollection<UserProfile>(AuthenticationService.Instance.GetAllUsersAsync().Result);
             AssetTypes = new ObservableCollection<AssetType>(GetAllAssetTypes());
+            Subtypes = new ObservableCollection<Subtype>(GetAllSubtypes());
+            Subtypes.Insert(0, new Subtype { TypeID = -1, TypeName = "" });
             StatusOptions = new ObservableCollection<string> { "Active", "Retired" };
 
             if (_asset.Owner != null)
@@ -210,6 +233,15 @@ namespace szakdolgozat.ViewModels
             else if (AssetTypes.Any())
             {
                 SelectedAssetType = AssetTypes.First();
+            }
+
+            if (_asset.Subtype != null)
+            {
+                SelectedSubtype = Subtypes.Where(st => st.TypeID == _asset.SubtypeID).First();
+            }
+            else if (Subtypes.Any())
+            {
+                SelectedSubtype = Subtypes.First();
             }
 
             if (_asset.Status != null)
@@ -277,6 +309,15 @@ namespace szakdolgozat.ViewModels
             {
                 var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
                 return context.AssetTypes.ToList();
+            }
+        }
+
+        private IEnumerable<Subtype> GetAllSubtypes()
+        {
+            using (var scope = App.ServiceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
+                return context.Subtypes.ToList();
             }
         }
     }

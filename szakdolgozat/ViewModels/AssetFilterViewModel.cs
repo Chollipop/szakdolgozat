@@ -14,6 +14,7 @@ namespace szakdolgozat.ViewModels
 
         private string _assetName;
         private AssetType _selectedAssetType;
+        private Subtype _selectedSubtype;
         private UserProfile _selectedOwner;
         private string _location;
         private DateTime? _purchaseDateFrom;
@@ -40,6 +41,17 @@ namespace szakdolgozat.ViewModels
             {
                 _selectedAssetType = value;
                 OnPropertyChanged(nameof(SelectedAssetType));
+            }
+        }
+
+        public ObservableCollection<Subtype> Subtypes { get; } = new ObservableCollection<Subtype>();
+        public Subtype SelectedSubtype
+        {
+            get => _selectedSubtype;
+            set
+            {
+                _selectedSubtype = value;
+                OnPropertyChanged(nameof(SelectedSubtype));
             }
         }
 
@@ -130,6 +142,11 @@ namespace szakdolgozat.ViewModels
             {
                 AssetTypes.Add(assetType);
             }
+            Subtypes = new ObservableCollection<Subtype> { new Subtype { TypeID = -1, TypeName = "" } };
+            foreach (var subtype in GetAllSubtypes())
+            {
+                Subtypes.Add(subtype);
+            }
             Statuses = new ObservableCollection<string> { "", "Active", "Retired" };
             SelectedStatus = Statuses[1];
             AssetListViewModel.AssetsChanged += OnAssetsChanged;
@@ -158,6 +175,15 @@ namespace szakdolgozat.ViewModels
             }
         }
 
+        private IEnumerable<Subtype> GetAllSubtypes()
+        {
+            using (var scope = App.ServiceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
+                return context.Subtypes.ToList();
+            }
+        }
+
         private void ApplyFilter()
         {
             List<Asset> filteredAssets;
@@ -166,12 +192,15 @@ namespace szakdolgozat.ViewModels
                 var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
                 var assetsList = context.Assets
                     .Include(a => a.AssetType)
+                    .Include(a => a.Subtype)
                     .Select(a => new Asset
                     {
                         AssetID = a.AssetID,
                         AssetName = a.AssetName,
                         AssetTypeID = a.AssetTypeID,
                         AssetType = a.AssetType,
+                        SubtypeID = a.SubtypeID,
+                        Subtype = a.Subtype,
                         Owner = a.Owner,
                         Location = a.Location,
                         PurchaseDate = a.PurchaseDate,
@@ -191,6 +220,11 @@ namespace szakdolgozat.ViewModels
             if (SelectedAssetType != null && SelectedAssetType.TypeID != -1)
             {
                 filteredAssets = filteredAssets.Where(a => a.AssetTypeID == SelectedAssetType.TypeID).ToList();
+            }
+
+            if (SelectedSubtype != null && SelectedSubtype.TypeID != -1)
+            {
+                filteredAssets = filteredAssets.Where(a => a.SubtypeID == SelectedSubtype.TypeID).ToList();
             }
 
             if (SelectedOwner != null && !string.IsNullOrEmpty(SelectedOwner.Id))
@@ -236,6 +270,7 @@ namespace szakdolgozat.ViewModels
         {
             AssetName = string.Empty;
             SelectedAssetType = AssetTypes.FirstOrDefault();
+            SelectedSubtype = Subtypes.FirstOrDefault();
             SelectedOwner = Owners.FirstOrDefault();
             Location = string.Empty;
             PurchaseDateFrom = null;

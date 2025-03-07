@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using szakdolgozat.Services;
 
 namespace szakdolgozat.Models
@@ -18,10 +19,15 @@ namespace szakdolgozat.Models
         public string AssetName { get; set; }
 
         [Required]
-        public int? AssetTypeID { get; set; }
+        public int AssetTypeID { get; set; }
 
         [ForeignKey("AssetTypeID")]
         public AssetType AssetType { get; set; }
+
+        public int? SubtypeID { get; set; }
+
+        [ForeignKey("SubtypeID")]
+        public Subtype? Subtype { get; set; }
 
         private string owner;
         [Required]

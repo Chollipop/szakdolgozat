@@ -11,7 +11,7 @@ using szakdolgozat;
 namespace szakdolgozat.Migrations
 {
     [DbContext(typeof(AssetDbContext))]
-    partial class AssetManagementContextModelSnapshot : ModelSnapshot
+    partial class AssetDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -35,8 +35,7 @@ namespace szakdolgozat.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("AssetTypeID")
-                        .IsRequired()
+                    b.Property<int>("AssetTypeID")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -63,6 +62,9 @@ namespace szakdolgozat.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int?>("SubtypeID")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("Value")
                         .IsRequired()
                         .HasColumnType("decimal(18,2)");
@@ -73,6 +75,8 @@ namespace szakdolgozat.Migrations
                         .IsUnique();
 
                     b.HasIndex("AssetTypeID");
+
+                    b.HasIndex("SubtypeID");
 
                     b.ToTable("Assets");
                 });
@@ -167,6 +171,33 @@ namespace szakdolgozat.Migrations
                     b.ToTable("AssetTypes");
                 });
 
+            modelBuilder.Entity("szakdolgozat.Models.Subtype", b =>
+                {
+                    b.Property<int>("TypeID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TypeID"));
+
+                    b.Property<int?>("AssetTypeID")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<string>("TypeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("TypeID");
+
+                    b.HasIndex("AssetTypeID");
+
+                    b.HasIndex("TypeID")
+                        .IsUnique();
+
+                    b.ToTable("Subtypes");
+                });
+
             modelBuilder.Entity("szakdolgozat.Models.Asset", b =>
                 {
                     b.HasOne("szakdolgozat.Models.AssetType", "AssetType")
@@ -175,7 +206,13 @@ namespace szakdolgozat.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("szakdolgozat.Models.Subtype", "Subtype")
+                        .WithMany()
+                        .HasForeignKey("SubtypeID");
+
                     b.Navigation("AssetType");
+
+                    b.Navigation("Subtype");
                 });
 
             modelBuilder.Entity("szakdolgozat.Models.AssetAssignment", b =>
@@ -198,6 +235,17 @@ namespace szakdolgozat.Migrations
                         .IsRequired();
 
                     b.Navigation("Asset");
+                });
+
+            modelBuilder.Entity("szakdolgozat.Models.Subtype", b =>
+                {
+                    b.HasOne("szakdolgozat.Models.AssetType", "AssetType")
+                        .WithMany()
+                        .HasForeignKey("AssetTypeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssetType");
                 });
 #pragma warning restore 612, 618
         }

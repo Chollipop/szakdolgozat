@@ -35,6 +35,9 @@
 
             <TextBlock Text="Asset Type" Margin="0,0,0,5"/>
             <ComboBox DisplayMemberPath="TypeName" ItemsSource="{Binding AssetTypes}" SelectedItem="{Binding SelectedAssetType}" Tag="Asset Type" Margin="0,0,0,10"/>
+            
+            <TextBlock Text="Subtype" Margin="0,0,0,5"/>
+            <ComboBox DisplayMemberPath="TypeName" ItemsSource="{Binding Subtypes}" SelectedItem="{Binding SelectedSubtype}" Tag="Subtype" Margin="0,0,0,10"/>
 
             <TextBlock Text="Owner" Margin="0,0,0,5"/>
             <ComboBox DisplayMemberPath="DisplayName" ItemsSource="{Binding Owners}" SelectedItem="{Binding SelectedOwner}" Tag="Owner" Margin="0,0,0,10"/>

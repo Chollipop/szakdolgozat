@@ -9,6 +9,7 @@ namespace szakdolgozat
         public DbSet<AssetType> AssetTypes { get; set; }
         public DbSet<AssetAssignment> AssetAssignments { get; set; }
         public DbSet<AssetLog> AssetLogs { get; set; }
+        public DbSet<Subtype> Subtypes { get; set; }
 
         public AssetDbContext(DbContextOptions<AssetDbContext> options): base(options) { }
     }
