@@ -23,8 +23,8 @@
               Grid.Row="1" 
               Grid.Column="0">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Type Name" Binding="{Binding TypeName}" />
-                <DataGridTextColumn Header="Subtype Name" Binding="{Binding AssetType.TypeName}" />
+                <DataGridTextColumn Header="Type Name" Binding="{Binding AssetType.TypeName}" />
+                <DataGridTextColumn Header="Subtype Name" Binding="{Binding TypeName}" />
             </DataGrid.Columns>
         </DataGrid>
 

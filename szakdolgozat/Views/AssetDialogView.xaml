@@ -40,7 +40,7 @@
             <ComboBox ItemsSource="{Binding AssetTypes}" Margin="0,0,0,10" DisplayMemberPath="TypeName" SelectedItem="{Binding SelectedAssetType}" />
             
             <TextBlock Text="Subtype" Margin="0,0,0,5"/>
-            <ComboBox ItemsSource="{Binding Subtypes}" Margin="0,0,0,10" DisplayMemberPath="TypeName" SelectedItem="{Binding SelectedSubtype}" />
+            <ComboBox ItemsSource="{Binding Subtypes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" DisplayMemberPath="TypeName" SelectedItem="{Binding SelectedSubtype}" />
             
             <TextBlock Text="Owner" Margin="0,0,0,5"/>
             <ComboBox ItemsSource="{Binding Users}" Margin="0,0,0,10" DisplayMemberPath="DisplayName" SelectedItem="{Binding SelectedUser}" />

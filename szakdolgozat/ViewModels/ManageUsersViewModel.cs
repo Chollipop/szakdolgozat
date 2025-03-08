@@ -154,7 +154,7 @@ namespace szakdolgozat.ViewModels
             {
                 var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
                 bool hasAsset = context.Assets.Any(a => a.Owner == SelectedUser.Id);
-                bool hasAssetAssignment = context.AssetAssignments.Any(a => a.User == SelectedUser.Id);
+                bool hasAssetAssignment = context.AssetAssignments.Any(aa => aa.User == SelectedUser.Id && DateTime.Now <= aa.ReturnDate);
                 if (!hasAsset && !hasAssetAssignment)
                 {
                     return true;
@@ -202,7 +202,7 @@ namespace szakdolgozat.ViewModels
                 {
                     string unifiedRoleAssignmentId = AuthenticationService.Instance.GetRoleAssignmentIdByPrincipalIdAsync(SelectedUser.Id).Result;
                     AuthenticationService.Instance.DeleteRoleAssignmentAsync(unifiedRoleAssignmentId).Wait();
-                    AuthenticationService.Instance.DeleteUserAsync(SelectedUser.Id).Wait();
+                    AuthenticationService.Instance.DisableUserAccountAsync(SelectedUser.Id).Wait();
                     _ = UpdateUsersAsync();
                 }
             }

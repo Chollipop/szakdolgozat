@@ -222,23 +222,30 @@ namespace szakdolgozat.ViewModels
 
         private bool CanDeleteAsset()
         {
-            if (SelectedAsset == null)
+            try
             {
-                return false;
-            }
-
-            using (var scope = App.ServiceProvider.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                if (context.AssetAssignments == null)
+                if (SelectedAsset == null)
                 {
                     return false;
                 }
 
-                bool hasAssignments = context.AssetAssignments
-                    .Any(aa => aa.AssetID == SelectedAsset.AssetID && DateTime.Now <= aa.ReturnDate);
+                using (var scope = App.ServiceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
+                    if (context.AssetAssignments == null)
+                    {
+                        return false;
+                    }
 
-                return SelectedAsset.Status != "Retired" && !hasAssignments;
+                    bool hasAssignments = context.AssetAssignments
+                        .Any(aa => aa.AssetID == SelectedAsset.AssetID && DateTime.Now <= aa.ReturnDate);
+
+                    return SelectedAsset.Status != "Retired" && !hasAssignments;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 

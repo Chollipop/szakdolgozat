@@ -56,7 +56,7 @@ namespace szakdolgozat
                 DataContext = x.GetRequiredService<MainWindowViewModel>(),
                 WindowState = WindowState.Maximized
             });
-            services.AddTransient<LoginView>();
+            services.AddSingleton<LoginView>();
             services.AddTransient<AssetListView>();
             services.AddTransient<AssetAssignmentListView>();
             services.AddTransient<AssetLogView>();

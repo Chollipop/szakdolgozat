@@ -51,7 +51,7 @@ namespace szakdolgozat.ViewModels
                 OnPropertyChanged(nameof(AssetType));
             }
         }
-        
+
         public Subtype Subtype
         {
             get => _asset.Subtype;
@@ -192,6 +192,17 @@ namespace szakdolgozat.ViewModels
             {
                 _asset.AssetType = value;
                 OnPropertyChanged(nameof(SelectedAssetType));
+                Subtypes = new ObservableCollection<Subtype>(GetAllSubtypes(value));
+                OnPropertyChanged(nameof(Subtypes));
+                if (_asset.Subtype != null && _asset.Subtype.TypeID != -1)
+                {
+                    SelectedSubtype = Subtypes.Where(st => st.TypeID == _asset.SubtypeID).First();
+                }
+                else
+                {
+                    SelectedSubtype = Subtypes.First();
+                }
+                OnPropertyChanged(nameof(SelectedSubtype));
             }
         }
 
@@ -213,8 +224,8 @@ namespace szakdolgozat.ViewModels
             _asset = asset ?? new Asset();
             Users = new ObservableCollection<UserProfile>(AuthenticationService.Instance.GetAllUsersAsync().Result);
             AssetTypes = new ObservableCollection<AssetType>(GetAllAssetTypes());
-            Subtypes = new ObservableCollection<Subtype>(GetAllSubtypes());
-            Subtypes.Insert(0, new Subtype { TypeID = -1, TypeName = "" });
+            Subtypes = new ObservableCollection<Subtype>();
+
             StatusOptions = new ObservableCollection<string> { "Active", "Retired" };
 
             if (_asset.Owner != null)
@@ -233,15 +244,6 @@ namespace szakdolgozat.ViewModels
             else if (AssetTypes.Any())
             {
                 SelectedAssetType = AssetTypes.First();
-            }
-
-            if (_asset.Subtype != null)
-            {
-                SelectedSubtype = Subtypes.Where(st => st.TypeID == _asset.SubtypeID).First();
-            }
-            else if (Subtypes.Any())
-            {
-                SelectedSubtype = Subtypes.First();
             }
 
             if (_asset.Status != null)
@@ -291,7 +293,7 @@ namespace szakdolgozat.ViewModels
                 window.DialogResult = false;
                 window.Close();
             }
-        }       
+        }
 
         private void CheckIfAssetHasAssignment()
         {
@@ -312,12 +314,14 @@ namespace szakdolgozat.ViewModels
             }
         }
 
-        private IEnumerable<Subtype> GetAllSubtypes()
+        private IEnumerable<Subtype> GetAllSubtypes(AssetType assetType)
         {
             using (var scope = App.ServiceProvider.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                return context.Subtypes.ToList();
+                var subtypes = context.Subtypes.Where(st => st.AssetTypeID == assetType.TypeID).ToList();
+                subtypes.Insert(0, new Subtype { TypeID = -1, TypeName = "" });
+                return subtypes;
             }
         }
     }

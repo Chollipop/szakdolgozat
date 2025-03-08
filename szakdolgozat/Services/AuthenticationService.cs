@@ -66,7 +66,7 @@ namespace szakdolgozat.Services
         {
             try
             {
-                var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.ReadWrite.All", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All", "RoleManagement.ReadWrite.Directory" }).ExecuteAsync().ConfigureAwait(false);
+                var result = await _publicClientApp.AcquireTokenInteractive(new[] { "User.ReadWrite.All", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All", "RoleManagement.ReadWrite.Directory", "Application.ReadWrite.All" }).ExecuteAsync().ConfigureAwait(false);
                 CurrentUser = result.Account;
                 AccessToken = result.AccessToken;
 
@@ -95,7 +95,7 @@ namespace szakdolgozat.Services
 
                 try
                 {
-                    var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.ReadWrite.All", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All", "RoleManagement.ReadWrite.Directory" }, firstAccount).ExecuteAsync().ConfigureAwait(false);
+                    var result = await _publicClientApp.AcquireTokenSilent(new[] { "User.ReadWrite.All", "Directory.ReadWrite.All", "AppRoleAssignment.ReadWrite.All", "RoleManagement.ReadWrite.Directory", "Application.ReadWrite.All" }, firstAccount).ExecuteAsync().ConfigureAwait(false);
                     CurrentUser = result.Account;
                     AccessToken = result.AccessToken;
 
@@ -144,7 +144,7 @@ namespace szakdolgozat.Services
         public async Task<List<UserProfile>> GetAllUsersAsync()
         {
             var users = new List<UserProfile>();
-            var userApiUrl = "https://graph.microsoft.com/v1.0/users";
+            var userApiUrl = "https://graph.microsoft.com/v1.0/users?$filter=accountEnabled+eq+true";
 
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, userApiUrl);
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
@@ -501,6 +501,28 @@ namespace szakdolgozat.Services
             return null;
         }
 
+        public async Task<bool> DisableUserAccountAsync(string userId)
+        {
+            var apiUrl = $"https://graph.microsoft.com/v1.0/users/{userId}";
+
+            var payload = new
+            {
+                accountEnabled = false
+            };
+
+            var jsonContent = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Patch, apiUrl)
+            {
+                Content = jsonContent
+            };
+
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
+
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+
+            return response.IsSuccessStatusCode;
+        }
     }
 
     public class UserRolesResponse
