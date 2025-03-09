@@ -133,31 +133,44 @@ namespace szakdolgozat.ViewModels
                 if (addAssetWindow.ShowDialog() == true)
                 {
                     var updatedAsset = viewModel.Asset;
+
                     using (var scope = App.ServiceProvider.CreateScope())
                     {
                         var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
 
-                        SelectedAsset.AssetName = updatedAsset.AssetName;
-                        SelectedAsset.AssetTypeID = updatedAsset.AssetTypeID;
-                        SelectedAsset.AssetType = updatedAsset.AssetType;
-                        if (updatedAsset.SubtypeID == -1)
-                        {
-                            SelectedAsset.SubtypeID = null;
-                            SelectedAsset.Subtype = null;
-                        }
-                        else
-                        {
-                            SelectedAsset.SubtypeID = updatedAsset.SubtypeID;
-                            SelectedAsset.Subtype = updatedAsset.Subtype;
-                        }
-                        SelectedAsset.Owner = updatedAsset.Owner;
-                        SelectedAsset.Location = updatedAsset.Location;
-                        SelectedAsset.PurchaseDate = updatedAsset.PurchaseDate;
-                        SelectedAsset.Value = updatedAsset.Value;
-                        SelectedAsset.Status = updatedAsset.Status;
-                        SelectedAsset.Description = updatedAsset.Description;
+                        var sql = @"
+                        UPDATE Assets
+                        SET 
+                            AssetName = {0},
+                            AssetTypeID = {1},
+                            SubtypeID = {2},
+                            Owner = {3},
+                            Location = {4},
+                            PurchaseDate = {5},
+                            Value = {6},
+                            Status = {7},
+                            Description = {8}
+                        WHERE AssetID = {9}";
 
-                        context.Assets.Update(SelectedAsset);
+                        await context.Database.ExecuteSqlRawAsync
+                        (
+                            sql,
+                            updatedAsset.AssetName,
+                            updatedAsset.AssetType.TypeID,
+                            updatedAsset.Subtype.TypeID == -1 ? null : updatedAsset.Subtype.TypeID,
+                            updatedAsset.Owner,
+                            updatedAsset.Location,
+                            updatedAsset.PurchaseDate,
+                            updatedAsset.Value,
+                            updatedAsset.Status,
+                            updatedAsset.Description,
+                            updatedAsset.AssetID
+                        );
+                    }
+
+                    using (var scope = App.ServiceProvider.CreateScope())
+                    {
+                        var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
 
                         var log = new AssetLog
                         {
@@ -170,6 +183,7 @@ namespace szakdolgozat.ViewModels
 
                         await context.SaveChangesAsync();
                     }
+
                     int index = Assets.IndexOf(SelectedAsset);
                     Assets.RemoveAt(index);
                     Assets.Insert(index, updatedAsset);
