@@ -138,39 +138,19 @@ namespace szakdolgozat.ViewModels
                     {
                         var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
 
-                        var sql = @"
-                        UPDATE Assets
-                        SET 
-                            AssetName = {0},
-                            AssetTypeID = {1},
-                            SubtypeID = {2},
-                            Owner = {3},
-                            Location = {4},
-                            PurchaseDate = {5},
-                            Value = {6},
-                            Status = {7},
-                            Description = {8}
-                        WHERE AssetID = {9}";
+                        SelectedAsset.AssetName = updatedAsset.AssetName;
+                        SelectedAsset.AssetTypeID = updatedAsset.AssetType.TypeID;
+                        SelectedAsset.AssetType = updatedAsset.AssetType;
+                        SelectedAsset.SubtypeID = updatedAsset.Subtype.TypeID == -1 ? null : updatedAsset.Subtype.TypeID;
+                        SelectedAsset.Subtype = updatedAsset.Subtype.TypeID == -1 ? null : updatedAsset.Subtype;
+                        SelectedAsset.Owner = updatedAsset.Owner;
+                        SelectedAsset.Location = updatedAsset.Location;
+                        SelectedAsset.PurchaseDate = updatedAsset.PurchaseDate;
+                        SelectedAsset.Value = updatedAsset.Value;
+                        SelectedAsset.Status = updatedAsset.Status;
+                        SelectedAsset.Description = updatedAsset.Description;
 
-                        await context.Database.ExecuteSqlRawAsync
-                        (
-                            sql,
-                            updatedAsset.AssetName,
-                            updatedAsset.AssetType.TypeID,
-                            updatedAsset.Subtype.TypeID == -1 ? null : updatedAsset.Subtype.TypeID,
-                            updatedAsset.Owner,
-                            updatedAsset.Location,
-                            updatedAsset.PurchaseDate,
-                            updatedAsset.Value,
-                            updatedAsset.Status,
-                            updatedAsset.Description,
-                            updatedAsset.AssetID
-                        );
-                    }
-
-                    using (var scope = App.ServiceProvider.CreateScope())
-                    {
-                        var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
+                        context.Assets.Update(SelectedAsset);
 
                         var log = new AssetLog
                         {
