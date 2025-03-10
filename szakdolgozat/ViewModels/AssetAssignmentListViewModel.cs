@@ -64,7 +64,7 @@ namespace szakdolgozat.ViewModels
             }
         }
 
-        private async Task LoadAssetAssignments()
+        public async Task LoadAssetAssignments()
         {
             using (var scope = App.ServiceProvider.CreateScope())
             {

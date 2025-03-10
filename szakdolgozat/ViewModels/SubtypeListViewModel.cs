@@ -1,18 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Identity.Client;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using szakdolgozat.Models;
-using szakdolgozat.Services;
 using szakdolgozat.Views;
 
 namespace szakdolgozat.ViewModels
 {
-    public class SubtypesViewModel : BaseViewModel
+    public class SubtypeListViewModel : BaseViewModel
     {
         private Subtype _subtype;
+
+        public event EventHandler SubtypesChanged;
 
         public ObservableCollection<Subtype> Subtypes { get; set; }
 
@@ -29,15 +29,17 @@ namespace szakdolgozat.ViewModels
         public ICommand AddSubtypeCommand { get; }
         public ICommand DeleteSubtypeCommand { get; }
 
-        public SubtypesViewModel()
+        public SubtypeListViewModel()
         {
             LoadSubtypes();
 
             AddSubtypeCommand = new RelayCommand(AddSubtype);
             DeleteSubtypeCommand = new RelayCommand(DeleteSubtype, CanDeleteSubtype);
+
+            App.ServiceProvider.GetRequiredService<AssetFilterViewModel>().SubscribeToSubtypeEvents(this);
         }
 
-        private async Task LoadSubtypes()
+        public async Task LoadSubtypes()
         {
             using (var scope = App.ServiceProvider.CreateScope())
             {
@@ -54,6 +56,8 @@ namespace szakdolgozat.ViewModels
                     .ToListAsync();
                 Subtypes = new ObservableCollection<Subtype>(subtypesList);
                 OnPropertyChanged(nameof(Subtypes));
+
+                SubtypesChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -78,6 +82,7 @@ namespace szakdolgozat.ViewModels
                 }
                 Subtypes.Add(newSubtype);
                 OnPropertyChanged(nameof(Subtypes));
+                OnSubtypesChanged();
             }
         }
 
@@ -106,7 +111,7 @@ namespace szakdolgozat.ViewModels
                     using (var scope = App.ServiceProvider.CreateScope())
                     {
                         var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                        
+
                         context.Subtypes.Remove(SelectedSubtype);
 
                         await context.SaveChangesAsync();
@@ -116,8 +121,14 @@ namespace szakdolgozat.ViewModels
                     int index = Subtypes.IndexOf(SelectedSubtype);
                     Subtypes.RemoveAt(index);
                     OnPropertyChanged(nameof(Subtypes));
+                    OnSubtypesChanged();
                 }
             }
+        }
+
+        protected virtual void OnSubtypesChanged()
+        {
+            SubtypesChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

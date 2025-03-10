@@ -15,14 +15,14 @@
         <DataTemplate DataType="{x:Type vm:AssetAssignmentListViewModel}">
             <v:AssetAssignmentListView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:AssetLogViewModel}">
-            <v:AssetLogView />
+        <DataTemplate DataType="{x:Type vm:AssetLogListViewModel}">
+            <v:AssetLogListView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ManageUsersViewModel}">
             <v:ManageUsersView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:SubtypesViewModel}">
-            <v:SubtypesView />
+        <DataTemplate DataType="{x:Type vm:SubtypeListViewModel}">
+            <v:SubtypeListView />
         </DataTemplate>
     </Window.Resources>
     <Grid>

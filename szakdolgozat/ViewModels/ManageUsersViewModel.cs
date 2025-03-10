@@ -17,6 +17,8 @@ namespace szakdolgozat.ViewModels
         private string _inviteEmailText;
         private User _selectedUser;
 
+        public event EventHandler UsersChanged;
+
         public ObservableCollection<User> Users { get; set; }
         public ObservableCollection<string> Roles { get; set; }
 
@@ -102,9 +104,13 @@ namespace szakdolgozat.ViewModels
             DeleteUserCommand = new RelayCommand(DeleteUserAsync, CanDeleteUser);
             InviteUserCommand = new RelayCommand(InviteUser);
             BulkInviteCommand = new RelayCommand(BulkInvite);
+
+            App.ServiceProvider.GetRequiredService<AssetFilterViewModel>().SubscribeToManageUsersEvents(this);
+            App.ServiceProvider.GetRequiredService<AssetAssignmentFilterViewModel>().SubscribeToManageUsersEvents(this);
+            App.ServiceProvider.GetRequiredService<AssetLogFilterViewModel>().SubscribeToManageUsersEvents(this);
         }
 
-        private async Task UpdateUsersAsync()
+        public async Task UpdateUsersAsync()
         {
             var userProfiles = await AuthenticationService.Instance.GetAllUsersAsync();
             Users.Clear();
@@ -129,6 +135,8 @@ namespace szakdolgozat.ViewModels
                 user.CurrentRoleChanged += (sender, e) => OnPropertyChanged(nameof(CanSaveChanges));
             }
             OnPropertyChanged(nameof(Users));
+
+            UsersChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private bool IsValidEmail(string email)

@@ -2,9 +2,9 @@
 
 namespace szakdolgozat.Views
 {
-    public partial class SubtypesView : UserControl
+    public partial class SubtypeListView : UserControl
     {
-        public SubtypesView()
+        public SubtypeListView()
         {
             InitializeComponent();
         }

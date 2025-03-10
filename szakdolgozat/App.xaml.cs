@@ -44,27 +44,27 @@ namespace szakdolgozat
             services.AddSingleton<LoginViewModel>();
             services.AddSingleton<AssetListViewModel>();
             services.AddSingleton<AssetAssignmentListViewModel>();
-            services.AddSingleton<AssetLogViewModel>();
+            services.AddSingleton<AssetLogListViewModel>();
             services.AddSingleton<AssetFilterViewModel>();
             services.AddSingleton<AssetAssignmentFilterViewModel>();
             services.AddSingleton<AssetLogFilterViewModel>();
             services.AddTransient<ManageUsersViewModel>();
-            services.AddSingleton<SubtypesViewModel>();
+            services.AddSingleton<SubtypeListViewModel>();
 
-            services.AddTransient<MainWindow>(x => new MainWindow()
+            services.AddSingleton<MainWindow>(x => new MainWindow()
             {
                 DataContext = x.GetRequiredService<MainWindowViewModel>(),
                 WindowState = WindowState.Maximized
             });
-            services.AddTransient<LoginView>();
-            services.AddTransient<AssetListView>();
-            services.AddTransient<AssetAssignmentListView>();
-            services.AddTransient<AssetLogView>();
-            services.AddTransient<AssetFilter>();
-            services.AddTransient<AssetAssignmentFilter>();
-            services.AddTransient<AssetLogFilter>();
+            services.AddSingleton<LoginView>();
+            services.AddSingleton<AssetListView>();
+            services.AddSingleton<AssetAssignmentListView>();
+            services.AddSingleton<AssetLogListView>();
+            services.AddSingleton<AssetFilter>();
+            services.AddSingleton<AssetAssignmentFilter>();
+            services.AddSingleton<AssetLogFilter>();
             services.AddTransient<ManageUsersView>();
-            services.AddTransient<SubtypesView>();
+            services.AddSingleton<SubtypeListView>();
         }
 
         private INavigationService CreateLoginNavigationService(IServiceProvider serviceProvider)

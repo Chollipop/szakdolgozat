@@ -42,7 +42,7 @@ namespace szakdolgozat.ViewModels
             UpdateAssetCommand = new RelayCommand(UpdateAsset, CanUpdateAsset);
         }
 
-        private async Task LoadAssets()
+        public async Task LoadAssets()
         {
             using (var scope = App.ServiceProvider.CreateScope())
             {

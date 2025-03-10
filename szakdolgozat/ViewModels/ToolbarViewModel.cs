@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows;
 using System.Windows.Input;
 using szakdolgozat.Services;
 
@@ -40,7 +41,7 @@ namespace szakdolgozat.ViewModels
 
         private void ViewAssetLogs()
         {
-            navigationService = new NavigationService<AssetLogViewModel>(() => App.ServiceProvider.GetRequiredService<AssetLogViewModel>());
+            navigationService = new NavigationService<AssetLogListViewModel>(() => App.ServiceProvider.GetRequiredService<AssetLogListViewModel>());
             navigationService.Navigate();
         }
 
@@ -49,16 +50,23 @@ namespace szakdolgozat.ViewModels
             navigationService = new NavigationService<ManageUsersViewModel>(() => App.ServiceProvider.GetRequiredService<ManageUsersViewModel>());
             navigationService.Navigate();
         }
-        
+
         private void ViewSubtypes()
         {
-            navigationService = new NavigationService<SubtypesViewModel>(() => App.ServiceProvider.GetRequiredService<SubtypesViewModel>());
+            navigationService = new NavigationService<SubtypeListViewModel>(() => App.ServiceProvider.GetRequiredService<SubtypeListViewModel>());
             navigationService.Navigate();
         }
 
         private void Logout()
         {
+            App.ServiceProvider.GetRequiredService<AssetFilterViewModel>().ClearFilters(true);
+
+            App.ServiceProvider.GetRequiredService<AssetAssignmentFilterViewModel>().ClearFilters(true);
+
+            App.ServiceProvider.GetRequiredService<AssetLogFilterViewModel>().ClearFilters(true);
+
             AuthenticationService.Instance.Logout();
+
             navigationService = new NavigationService<LoginViewModel>(() => App.ServiceProvider.GetRequiredService<LoginViewModel>());
             navigationService.Navigate();
         }

@@ -9,7 +9,7 @@ namespace szakdolgozat.ViewModels
 {
     public class AssetLogFilterViewModel : BaseViewModel
     {
-        private AssetLogViewModel _assetLogViewModel;
+        private AssetLogListViewModel _assetLogViewModel;
 
         private string _assetName;
         private string _selectedAction;
@@ -38,7 +38,7 @@ namespace szakdolgozat.ViewModels
             }
         }
 
-        public ObservableCollection<UserProfile> Users { get; } = new ObservableCollection<UserProfile>();
+        public ObservableCollection<UserProfile> Users { get; set; } = new ObservableCollection<UserProfile>();
         public UserProfile SelectedUser
         {
             get => _selectedUser;
@@ -74,12 +74,10 @@ namespace szakdolgozat.ViewModels
 
         public AssetLogFilterViewModel()
         {
-            _assetLogViewModel = App.ServiceProvider.GetRequiredService<AssetLogViewModel>();
+            _assetLogViewModel = App.ServiceProvider.GetRequiredService<AssetLogListViewModel>();
             ApplyFilterCommand = new RelayCommand(ApplyFilter);
-            ClearFilterCommand = new RelayCommand(ClearFilters);
+            ClearFilterCommand = new RelayCommand(() => ClearFilters());
 
-            Users = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
-            LoadUsersAsync();
             _assetLogViewModel.AssetLogsChangedReapplyFilters += OnAssetLogsChanged;
         }
 
@@ -147,7 +145,7 @@ namespace szakdolgozat.ViewModels
             _assetLogViewModel.NotifyAssetLogsChanged();
         }
 
-        private void ClearFilters()
+        public void ClearFilters(bool onLogout = false)
         {
             AssetName = string.Empty;
             SelectedAction = Actions.FirstOrDefault();
@@ -155,27 +153,22 @@ namespace szakdolgozat.ViewModels
             TimestampFrom = null;
             TimestampTo = null;
 
-            List<AssetLog> logs;
-            using (var scope = App.ServiceProvider.CreateScope())
+            if (!onLogout)
             {
-                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                var logsList = context.AssetLogs
-                    .Include(l => l.Asset)
-                    .Select(l => new AssetLog
-                    {
-                        LogID = l.LogID,
-                        AssetID = l.AssetID,
-                        Asset = l.Asset,
-                        Action = l.Action,
-                        Timestamp = l.Timestamp,
-                        PerformedBy = l.PerformedBy
-                    })
-                    .ToList();
-                logs = new List<AssetLog>(logsList);
+                ApplyFilter();
             }
+        }
 
-            _assetLogViewModel.AssetLogs = new ObservableCollection<AssetLog>(logs);
-            _assetLogViewModel.NotifyAssetLogsChanged();
+        public void UsersChanged(object sender, EventArgs e)
+        {
+            Users = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
+            LoadUsersAsync();
+            OnPropertyChanged(nameof(Users));
+        }
+
+        public void SubscribeToManageUsersEvents(ManageUsersViewModel manageUsersViewModel)
+        {
+            manageUsersViewModel.UsersChanged += UsersChanged;
         }
     }
 }

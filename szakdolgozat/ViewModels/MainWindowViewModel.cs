@@ -47,13 +47,17 @@ namespace szakdolgozat.ViewModels
             {
                 WindowTitle = "Asset Assignments";
             }
-            else if (CurrentViewModel is AssetLogViewModel)
+            else if (CurrentViewModel is AssetLogListViewModel)
             {
                 WindowTitle = "Asset Logs";
             }
             else if (CurrentViewModel is ManageUsersViewModel)
             {
                 WindowTitle = "Manage Users";
+            }
+            else if (CurrentViewModel is SubtypeListViewModel)
+            {
+                WindowTitle = "Subtypes";
             }
         }
     }

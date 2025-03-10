@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
-using System.Windows;
 using System.Windows.Input;
 using szakdolgozat.Models;
 using szakdolgozat.Services;
@@ -29,7 +28,7 @@ namespace szakdolgozat.ViewModels
             }
         }
 
-        public ObservableCollection<UserProfile> Users { get; } = new ObservableCollection<UserProfile>();
+        public ObservableCollection<UserProfile> Users { get; set; } = new ObservableCollection<UserProfile>();
         public UserProfile SelectedUser
         {
             get => _selectedUser;
@@ -87,10 +86,8 @@ namespace szakdolgozat.ViewModels
         {
             _assetAssignmentListViewModel = App.ServiceProvider.GetRequiredService<AssetAssignmentListViewModel>();
             ApplyFilterCommand = new RelayCommand(ApplyFilter);
-            ClearFilterCommand = new RelayCommand(ClearFilters);
+            ClearFilterCommand = new RelayCommand(() => ClearFilters());
 
-            Users = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
-            LoadUsersAsync();
             AssignmentDateFrom = DateTime.Today;
             _assetAssignmentListViewModel.AssetAssignmentsChanged += OnAssetAssignmentsChanged;
         }
@@ -164,7 +161,7 @@ namespace szakdolgozat.ViewModels
         }
 
 
-        private void ClearFilters()
+        public void ClearFilters(bool onLogout = false)
         {
             AssetName = string.Empty;
             SelectedUser = Users.FirstOrDefault();
@@ -173,7 +170,22 @@ namespace szakdolgozat.ViewModels
             ReturnDateFrom = null;
             ReturnDateTo = null;
 
-            ApplyFilter();
+            if (!onLogout)
+            {
+                ApplyFilter();
+            }
+        }
+
+        public void UsersChanged(object sender, EventArgs e)
+        {
+            Users = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
+            LoadUsersAsync();
+            OnPropertyChanged(nameof(Users));
+        }
+
+        public void SubscribeToManageUsersEvents(ManageUsersViewModel manageUsersViewModel)
+        {
+            manageUsersViewModel.UsersChanged += UsersChanged;
         }
     }
 }

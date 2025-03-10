@@ -2,9 +2,9 @@
 
 namespace szakdolgozat.Views
 {
-    public partial class AssetLogView : UserControl
+    public partial class AssetLogListView : UserControl
     {
-        public AssetLogView()
+        public AssetLogListView()
         {
             InitializeComponent();
         }

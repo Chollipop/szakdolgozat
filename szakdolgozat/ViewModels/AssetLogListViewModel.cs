@@ -5,19 +5,19 @@ using szakdolgozat.Models;
 
 namespace szakdolgozat.ViewModels
 {
-    public class AssetLogViewModel : BaseViewModel
+    public class AssetLogListViewModel : BaseViewModel
     {
         public ObservableCollection<AssetLog> AssetLogs { get; set; }
 
         public event EventHandler AssetLogsChangedReapplyFilters;
 
-        public AssetLogViewModel()
+        public AssetLogListViewModel()
         {
             LoadAssetLogs();
             App.ServiceProvider.GetRequiredService<AssetListViewModel>().AssetLogsChanged += OnAssetLogsChanged;
         }
 
-        private async Task LoadAssetLogs()
+        public async Task LoadAssetLogs()
         {
             using (var scope = App.ServiceProvider.CreateScope())
             {
