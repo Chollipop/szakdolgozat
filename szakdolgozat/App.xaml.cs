@@ -50,6 +50,8 @@ namespace szakdolgozat
             services.AddSingleton<AssetLogFilterViewModel>();
             services.AddTransient<ManageUsersViewModel>();
             services.AddSingleton<SubtypeListViewModel>();
+            services.AddSingleton<AssetVulnerabilityViewModel>();
+            services.AddSingleton<ChartExportService>();
 
             services.AddSingleton<MainWindow>(x => new MainWindow()
             {
@@ -65,6 +67,7 @@ namespace szakdolgozat
             services.AddSingleton<AssetLogFilter>();
             services.AddTransient<ManageUsersView>();
             services.AddSingleton<SubtypeListView>();
+            services.AddSingleton<AssetVulnerabilityView>();
         }
 
         private INavigationService CreateLoginNavigationService(IServiceProvider serviceProvider)

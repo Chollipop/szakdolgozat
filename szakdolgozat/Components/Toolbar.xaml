@@ -34,6 +34,8 @@
                             Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=admin}" />
                         <Button Content="View Subtypes" Height="35" Padding="5" Margin="1" Command="{Binding ViewSubtypesCommand}" 
                             Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=edit}" />
+                        <Button Content="View Vulnerabilities" Height="35" Padding="5" Margin="1" Command="{Binding ViewAssetVulnerabilitiesCommand}" 
+                            Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=admin}" />
                     </StackPanel>
                 </Border>
             </Popup>

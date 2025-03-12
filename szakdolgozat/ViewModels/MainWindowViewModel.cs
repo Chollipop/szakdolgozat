@@ -59,6 +59,10 @@ namespace szakdolgozat.ViewModels
             {
                 WindowTitle = "Subtypes";
             }
+            else if (CurrentViewModel is AssetVulnerabilityViewModel)
+            {
+                WindowTitle = "Vulnerabilities";
+            }
         }
     }
 }

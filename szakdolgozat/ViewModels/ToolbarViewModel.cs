@@ -13,6 +13,7 @@ namespace szakdolgozat.ViewModels
         public ICommand ViewAssetLogsCommand { get; }
         public ICommand ViewManageUsersCommand { get; }
         public ICommand ViewSubtypesCommand { get; }
+        public ICommand ViewAssetVulnerabilitiesCommand { get; }
         public ICommand LogoutCommand { get; }
 
         public string CurrentUser => $"Current User: {AuthenticationService.Instance.CurrentUser.Username}";
@@ -24,6 +25,7 @@ namespace szakdolgozat.ViewModels
             ViewAssetLogsCommand = new RelayCommand(ViewAssetLogs);
             ViewManageUsersCommand = new RelayCommand(ViewManageUsers);
             ViewSubtypesCommand = new RelayCommand(ViewSubtypes);
+            ViewAssetVulnerabilitiesCommand = new RelayCommand(ViewAssetVulnerabilities);
             LogoutCommand = new RelayCommand(Logout);
         }
 
@@ -54,6 +56,12 @@ namespace szakdolgozat.ViewModels
         private void ViewSubtypes()
         {
             navigationService = new NavigationService<SubtypeListViewModel>(() => App.ServiceProvider.GetRequiredService<SubtypeListViewModel>());
+            navigationService.Navigate();
+        }
+
+        private void ViewAssetVulnerabilities()
+        {
+            navigationService = new NavigationService<AssetVulnerabilityViewModel>(() => App.ServiceProvider.GetRequiredService<AssetVulnerabilityViewModel>());
             navigationService.Navigate();
         }
 

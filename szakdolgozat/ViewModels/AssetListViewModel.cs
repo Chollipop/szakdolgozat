@@ -1,18 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
+using OxyPlot.Series;
+using OxyPlot;
+using OxyPlot.Wpf;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using szakdolgozat.Models;
 using szakdolgozat.Services;
 using szakdolgozat.Views;
+using OxyPlot.Axes;
+using System.Collections.Concurrent;
 
 namespace szakdolgozat.ViewModels
 {
     public class AssetListViewModel : BaseViewModel
     {
         private Asset _selectedAsset;
+
+        private ChartExportService _chartExportService;
 
         public ObservableCollection<Asset> Assets { get; set; }
 
@@ -32,14 +39,20 @@ namespace szakdolgozat.ViewModels
         public ICommand AddAssetCommand { get; }
         public ICommand DeleteAssetCommand { get; }
         public ICommand UpdateAssetCommand { get; }
+        public ICommand GenerateColumnChartCommand { get; }
+        public ICommand GeneratePiechartCommand { get; }
 
         public AssetListViewModel()
         {
             LoadAssets();
 
+            _chartExportService = App.ServiceProvider.GetRequiredService<ChartExportService>();
+
             AddAssetCommand = new RelayCommand(AddAsset);
             DeleteAssetCommand = new RelayCommand(DeleteAsset, CanDeleteAsset);
             UpdateAssetCommand = new RelayCommand(UpdateAsset, CanUpdateAsset);
+            GenerateColumnChartCommand = new RelayCommand(GenerateColumnChart);
+            GeneratePiechartCommand = new RelayCommand(GeneratePiechart);
         }
 
         public async Task LoadAssets()
@@ -90,7 +103,7 @@ namespace szakdolgozat.ViewModels
                         context.AssetTypes.Attach(newAsset.AssetType);
                     }
 
-                    if (newAsset.Subtype?.TypeID == -1)
+                    if (newAsset.Subtype?.TypeID == -1 || newAsset.Subtype == null)
                     {
 
                         newAsset.SubtypeID = null;
@@ -256,6 +269,87 @@ namespace szakdolgozat.ViewModels
         public void NotifyAssetsChanged()
         {
             OnPropertyChanged(nameof(Assets));
+        }
+
+        public void GenerateColumnChart()
+        {
+            var barModel = new PlotModel { Title = "Asset Count Per Type" };
+
+            ConcurrentDictionary<string, int> data = new ConcurrentDictionary<string, int>();
+            foreach (var asset in Assets)
+            {
+                data.AddOrUpdate(asset.AssetType.TypeName, 1, (key, oldValue) => oldValue + 1);
+            }
+
+            var sortedData = data.OrderByDescending(kvp => kvp.Value).ToList();
+
+            var categoryAxis = new CategoryAxis
+            {
+                Position = AxisPosition.Bottom,
+                Key = "CategoryAxis"
+            };
+
+            foreach (var kvp in sortedData)
+            {
+                categoryAxis.Labels.Add(kvp.Key);
+            }
+
+            var valueAxis = new LinearAxis
+            {
+                Position = AxisPosition.Left,
+                Key = "ValueAxis",
+                Minimum = 0,
+                Title = "Values",
+                MajorStep = 1
+            };
+
+            barModel.Axes.Add(categoryAxis);
+            barModel.Axes.Add(valueAxis);
+
+            var barSeries = new BarSeries
+            {
+                ItemsSource = sortedData.Select(kvp => new BarItem { Value = kvp.Value }).ToList(),
+                LabelPlacement = LabelPlacement.Inside,
+                LabelFormatString = "{0}",
+                XAxisKey = "ValueAxis",
+                YAxisKey = "CategoryAxis"
+            };
+
+            barModel.Series.Add(barSeries);
+
+            _chartExportService.ExportColumnChart(barModel);
+        }
+
+        public void GeneratePiechart()
+        {
+            var pieModel = new PlotModel { Title = "Asset Distribution By Type" };
+
+            ConcurrentDictionary<string, int> data = new ConcurrentDictionary<string, int>();
+            foreach (var asset in Assets)
+            {
+                data.AddOrUpdate(asset.AssetType.TypeName, 1, (key, oldValue) => oldValue + 1);
+            }
+
+            int totalAssets = data.Values.Sum();
+
+            var pieSeries = new PieSeries
+            {
+                StrokeThickness = 2.0,
+                InsideLabelPosition = 0.8,
+                AngleSpan = 360,
+                StartAngle = 0,
+                InsideLabelFormat = "{1} ({0:F1}%)"
+            };
+
+            foreach (var kvp in data)
+            {
+                double percentage = (double)kvp.Value / totalAssets * 100;
+                pieSeries.Slices.Add(new PieSlice(kvp.Key, percentage));
+            }
+
+            pieModel.Series.Add(pieSeries);
+
+            _chartExportService.ExportPiechart(pieModel);
         }
     }
 }

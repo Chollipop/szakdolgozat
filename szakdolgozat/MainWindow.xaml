@@ -24,6 +24,9 @@
         <DataTemplate DataType="{x:Type vm:SubtypeListViewModel}">
             <v:SubtypeListView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AssetVulnerabilityViewModel}">
+            <v:AssetVulnerabilityView />
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <ContentControl Content="{Binding CurrentViewModel}" />
