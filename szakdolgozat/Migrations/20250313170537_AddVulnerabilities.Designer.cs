@@ -12,7 +12,7 @@ using szakdolgozat;
 namespace szakdolgozat.Migrations
 {
     [DbContext(typeof(AssetDbContext))]
-    [Migration("20250312131817_AddVulnerabilities")]
+    [Migration("20250313170537_AddVulnerabilities")]
     partial class AddVulnerabilities
     {
         /// <inheritdoc />
