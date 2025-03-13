@@ -78,6 +78,8 @@ namespace szakdolgozat.ViewModels
             ApplyFilterCommand = new RelayCommand(ApplyFilter);
             ClearFilterCommand = new RelayCommand(() => ClearFilters());
 
+            UsersChanged(this, EventArgs.Empty);
+
             _assetLogViewModel.AssetLogsChangedReapplyFilters += OnAssetLogsChanged;
         }
 

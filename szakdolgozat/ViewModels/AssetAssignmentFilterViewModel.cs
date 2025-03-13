@@ -88,6 +88,8 @@ namespace szakdolgozat.ViewModels
             ApplyFilterCommand = new RelayCommand(ApplyFilter);
             ClearFilterCommand = new RelayCommand(() => ClearFilters());
 
+            UsersChanged(this, EventArgs.Empty);
+
             AssignmentDateFrom = DateTime.Today;
             _assetAssignmentListViewModel.AssetAssignmentsChanged += OnAssetAssignmentsChanged;
         }
