@@ -160,6 +160,17 @@ namespace szakdolgozat.ViewModels
             _assetAssignmentListViewModel.NotifyAssetAssignmentsChanged();
         }
 
+        private void UsersChanged(object sender, EventArgs e)
+        {
+            Users = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
+            LoadUsersAsync();
+            OnPropertyChanged(nameof(Users));
+        }
+
+        public void SubscribeToManageUsersEvents(ManageUsersViewModel manageUsersViewModel)
+        {
+            manageUsersViewModel.UsersChanged += UsersChanged;
+        }
 
         public void ClearFilters(bool onLogout = false)
         {
@@ -174,18 +185,6 @@ namespace szakdolgozat.ViewModels
             {
                 ApplyFilter();
             }
-        }
-
-        public void UsersChanged(object sender, EventArgs e)
-        {
-            Users = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
-            LoadUsersAsync();
-            OnPropertyChanged(nameof(Users));
-        }
-
-        public void SubscribeToManageUsersEvents(ManageUsersViewModel manageUsersViewModel)
-        {
-            manageUsersViewModel.UsersChanged += UsersChanged;
         }
     }
 }

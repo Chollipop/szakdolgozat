@@ -1,11 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using szakdolgozat.Models;
-using szakdolgozat.Services;
 
 namespace szakdolgozat.ViewModels
 {

@@ -39,7 +39,7 @@ namespace szakdolgozat.ViewModels
             App.ServiceProvider.GetRequiredService<AssetFilterViewModel>().SubscribeToSubtypeEvents(this);
         }
 
-        public async Task LoadSubtypes()
+        private async Task LoadSubtypes()
         {
             using (var scope = App.ServiceProvider.CreateScope())
             {

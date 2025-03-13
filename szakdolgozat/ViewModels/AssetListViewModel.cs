@@ -1,17 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
-using OxyPlot.Series;
 using OxyPlot;
-using OxyPlot.Wpf;
+using OxyPlot.Axes;
+using OxyPlot.Series;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using szakdolgozat.Models;
 using szakdolgozat.Services;
 using szakdolgozat.Views;
-using OxyPlot.Axes;
-using System.Collections.Concurrent;
 
 namespace szakdolgozat.ViewModels
 {
@@ -37,10 +37,9 @@ namespace szakdolgozat.ViewModels
         public event EventHandler AssetLogsChanged;
 
         public ICommand AddAssetCommand { get; }
-        public ICommand DeleteAssetCommand { get; }
         public ICommand UpdateAssetCommand { get; }
-        public ICommand GenerateColumnChartCommand { get; }
-        public ICommand GeneratePiechartCommand { get; }
+        public ICommand DeleteAssetCommand { get; }
+        public ICommand GenerateChartCommand { get; }
 
         public AssetListViewModel()
         {
@@ -49,13 +48,12 @@ namespace szakdolgozat.ViewModels
             _chartExportService = App.ServiceProvider.GetRequiredService<ChartExportService>();
 
             AddAssetCommand = new RelayCommand(AddAsset);
-            DeleteAssetCommand = new RelayCommand(DeleteAsset, CanDeleteAsset);
             UpdateAssetCommand = new RelayCommand(UpdateAsset, CanUpdateAsset);
-            GenerateColumnChartCommand = new RelayCommand(GenerateColumnChart);
-            GeneratePiechartCommand = new RelayCommand(GeneratePiechart);
+            DeleteAssetCommand = new RelayCommand(DeleteAsset, CanDeleteAsset);
+            GenerateChartCommand = new RelayCommand(ShowChartSelectionDialog);
         }
 
-        public async Task LoadAssets()
+        private async Task LoadAssets()
         {
             using (var scope = App.ServiceProvider.CreateScope())
             {
@@ -136,6 +134,11 @@ namespace szakdolgozat.ViewModels
             }
         }
 
+        private bool CanUpdateAsset()
+        {
+            return SelectedAsset != null;
+        }
+
         private async void UpdateAsset()
         {
             if (SelectedAsset != null)
@@ -187,9 +190,33 @@ namespace szakdolgozat.ViewModels
             }
         }
 
-        private bool CanUpdateAsset()
+        private bool CanDeleteAsset()
         {
-            return SelectedAsset != null;
+            try
+            {
+                if (SelectedAsset == null)
+                {
+                    return false;
+                }
+
+                using (var scope = App.ServiceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
+                    if (context.AssetAssignments == null)
+                    {
+                        return false;
+                    }
+
+                    bool hasAssignments = context.AssetAssignments
+                        .Any(aa => aa.AssetID == SelectedAsset.AssetID && DateTime.Now <= aa.ReturnDate);
+
+                    return SelectedAsset.Status != "Retired" && !hasAssignments;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private async void DeleteAsset()
@@ -227,51 +254,93 @@ namespace szakdolgozat.ViewModels
             }
         }
 
-        private bool CanDeleteAsset()
+        private void ShowChartSelectionDialog()
         {
-            try
+            var dialog = new Window
             {
-                if (SelectedAsset == null)
-                {
-                    return false;
-                }
+                Title = "Select Chart Type",
+                Width = 300,
+                Height = 150,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            };
 
-                using (var scope = App.ServiceProvider.CreateScope())
-                {
-                    var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                    if (context.AssetAssignments == null)
-                    {
-                        return false;
-                    }
-
-                    bool hasAssignments = context.AssetAssignments
-                        .Any(aa => aa.AssetID == SelectedAsset.AssetID && DateTime.Now <= aa.ReturnDate);
-
-                    return SelectedAsset.Status != "Retired" && !hasAssignments;
-                }
-            }
-            catch (Exception)
+            var stackPanel = new StackPanel
             {
-                return false;
-            }
+                Margin = new Thickness(10)
+            };
+
+            var assetCountPerType = new RadioButton
+            {
+                Content = "Asset Count Per Type",
+                Margin = new Thickness(0, 0, 0, 10),
+                IsChecked = true
+            };
+
+            var assetDistributionByType = new RadioButton
+            {
+                Content = "Asset Distribution By Type",
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+
+            stackPanel.Children.Add(assetCountPerType);
+            stackPanel.Children.Add(assetDistributionByType);
+
+            var okButton = new Button
+            {
+                Content = "Generate",
+                Width = 75,
+                Height = 30,
+                Margin = new Thickness(0, 10, 0, 0),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
+            };
+
+            var cancelButton = new Button
+            {
+                Content = "Cancel",
+                Width = 75,
+                Height = 30,
+                Margin = new Thickness(10, 10, 0, 0),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Left
+            };
+
+            var buttonPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+            };
+
+            buttonPanel.Children.Add(okButton);
+            buttonPanel.Children.Add(cancelButton);
+
+            stackPanel.Children.Add(buttonPanel);
+
+            dialog.Content = stackPanel;
+
+            okButton.Click += (sender, e) =>
+            {
+                if (assetCountPerType.IsChecked == true)
+                {
+                    GenerateColumnChart();
+                }
+                else if (assetDistributionByType.IsChecked == true)
+                {
+                    GeneratePiechart();
+                }
+                dialog.DialogResult = true;
+                dialog.Close();
+            };
+
+            cancelButton.Click += (sender, e) =>
+            {
+                dialog.DialogResult = false;
+                dialog.Close();
+            };
+
+            dialog.ShowDialog();
         }
 
-        protected virtual void OnAssetsChanged()
-        {
-            AssetsChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        protected virtual void OnAssetLogsChanged()
-        {
-            AssetLogsChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        public void NotifyAssetsChanged()
-        {
-            OnPropertyChanged(nameof(Assets));
-        }
-
-        public void GenerateColumnChart()
+        private void GenerateColumnChart()
         {
             var barModel = new PlotModel { Title = "Asset Count Per Type" };
 
@@ -320,7 +389,7 @@ namespace szakdolgozat.ViewModels
             _chartExportService.ExportColumnChart(barModel);
         }
 
-        public void GeneratePiechart()
+        private void GeneratePiechart()
         {
             var pieModel = new PlotModel { Title = "Asset Distribution By Type" };
 
@@ -350,6 +419,21 @@ namespace szakdolgozat.ViewModels
             pieModel.Series.Add(pieSeries);
 
             _chartExportService.ExportPiechart(pieModel);
+        }
+
+        protected virtual void OnAssetsChanged()
+        {
+            AssetsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected virtual void OnAssetLogsChanged()
+        {
+            AssetLogsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void NotifyAssetsChanged()
+        {
+            OnPropertyChanged(nameof(Assets));
         }
     }
 }

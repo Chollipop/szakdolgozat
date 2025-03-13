@@ -13,6 +13,6 @@ namespace szakdolgozat
         public DbSet<Vulnerability> Vulnerabilities { get; set; }
         public DbSet<AssetVulnerability> AssetVulnerabilities { get; set; }
 
-        public AssetDbContext(DbContextOptions<AssetDbContext> options): base(options) { }
+        public AssetDbContext(DbContextOptions<AssetDbContext> options) : base(options) { }
     }
 }

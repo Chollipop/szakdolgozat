@@ -154,6 +154,33 @@ namespace szakdolgozat.ViewModels
             }
         }
 
+        private void AssetTypesChanged()
+        {
+            AssetTypes = new ObservableCollection<AssetType> { new AssetType { TypeID = -1, TypeName = "" } };
+            foreach (var assetType in GetAllAssetTypes())
+            {
+                AssetTypes.Add(assetType);
+            }
+            OnPropertyChanged(nameof(AssetTypes));
+        }
+
+        private void SubtypesChanged(object sender, EventArgs e)
+        {
+            Subtypes = new ObservableCollection<Subtype> { new Subtype { TypeID = -1, TypeName = "" } };
+            foreach (var subtype in GetAllSubtypes())
+            {
+                Subtypes.Add(subtype);
+            }
+            OnPropertyChanged(nameof(Subtypes));
+        }
+
+        private void OwnersChanged(object sender, EventArgs e)
+        {
+            Owners = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
+            LoadOwnersAsync();
+            OnPropertyChanged(nameof(Owners));
+        }
+
         private void OnAssetsChanged(object sender, EventArgs e)
         {
             ApplyFilter();
@@ -276,33 +303,6 @@ namespace szakdolgozat.ViewModels
             {
                 ApplyFilter();
             }
-        }
-
-        public void AssetTypesChanged()
-        {
-            AssetTypes = new ObservableCollection<AssetType> { new AssetType { TypeID = -1, TypeName = "" } };
-            foreach (var assetType in GetAllAssetTypes())
-            {
-                AssetTypes.Add(assetType);
-            }
-            OnPropertyChanged(nameof(AssetTypes));
-        }
-
-        public void SubtypesChanged(object sender, EventArgs e)
-        {
-            Subtypes = new ObservableCollection<Subtype> { new Subtype { TypeID = -1, TypeName = "" } };
-            foreach (var subtype in GetAllSubtypes())
-            {
-                Subtypes.Add(subtype);
-            }
-            OnPropertyChanged(nameof(Subtypes));
-        }
-
-        public void OwnersChanged(object sender, EventArgs e)
-        {
-            Owners = new ObservableCollection<UserProfile> { new UserProfile { Id = null, DisplayName = "" } };
-            LoadOwnersAsync();
-            OnPropertyChanged(nameof(Owners));
         }
 
         public void SubscribeToSubtypeEvents(SubtypeListViewModel subtypeListViewModel)

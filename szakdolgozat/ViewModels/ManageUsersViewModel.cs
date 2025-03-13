@@ -110,7 +110,7 @@ namespace szakdolgozat.ViewModels
             App.ServiceProvider.GetRequiredService<AssetLogFilterViewModel>().SubscribeToManageUsersEvents(this);
         }
 
-        public async Task UpdateUsersAsync()
+        private async Task UpdateUsersAsync()
         {
             var userProfiles = await AuthenticationService.Instance.GetAllUsersAsync();
             Users.Clear();
@@ -139,39 +139,7 @@ namespace szakdolgozat.ViewModels
             UsersChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private bool IsValidEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email)) return false;
-
-            try
-            {
-                var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-                return Regex.IsMatch(email, emailPattern);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool CanDeleteUser()
-        {
-            if (SelectedUser == null) return false;
-
-            using (var scope = App.ServiceProvider.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
-                bool hasAsset = context.Assets.Any(a => a.Owner == SelectedUser.Id);
-                bool hasAssetAssignment = context.AssetAssignments.Any(aa => aa.User == SelectedUser.Id && DateTime.Now <= aa.ReturnDate);
-                if (!hasAsset && !hasAssetAssignment)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public void SaveChanges()
+        private void SaveChanges()
         {
             bool allSuccess = true;
             foreach (var user in Users)
@@ -201,7 +169,24 @@ namespace szakdolgozat.ViewModels
             }
         }
 
-        public void DeleteUserAsync()
+        private bool CanDeleteUser()
+        {
+            if (SelectedUser == null) return false;
+
+            using (var scope = App.ServiceProvider.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AssetDbContext>();
+                bool hasAsset = context.Assets.Any(a => a.Owner == SelectedUser.Id);
+                bool hasAssetAssignment = context.AssetAssignments.Any(aa => aa.User == SelectedUser.Id && DateTime.Now <= aa.ReturnDate);
+                if (!hasAsset && !hasAssetAssignment)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void DeleteUserAsync()
         {
             if (SelectedUser != null)
             {
@@ -216,7 +201,7 @@ namespace szakdolgozat.ViewModels
             }
         }
 
-        public void InviteUser()
+        private void InviteUser()
         {
             bool invitationSuccess = AuthenticationService.Instance.SendInvitationAsync(InviteEmailText).Result;
 
@@ -232,7 +217,22 @@ namespace szakdolgozat.ViewModels
             _ = UpdateUsersAsync();
         }
 
-        public void BulkInvite()
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email)) return false;
+
+            try
+            {
+                var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+                return Regex.IsMatch(email, emailPattern);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void BulkInvite()
         {
             string csvFilePath = OpenFileDialogToSelectCsvFile();
 

@@ -4,14 +4,15 @@ using szakdolgozat.Services;
 
 namespace szakdolgozat.ViewModels
 {
-    public partial class LoginViewModel : BaseViewModel
+    public class LoginViewModel : BaseViewModel
     {
         private NavigationService<AssetListViewModel> navigationService;
         private bool loginSuccess;
 
-        public ICommand LoginCommand { get; }
         public bool KeepMeLoggedIn { get; set; }
-        
+
+        public ICommand LoginCommand { get; }
+
         public LoginViewModel()
         {
             navigationService = new NavigationService<AssetListViewModel>(() => App.ServiceProvider.GetRequiredService<AssetListViewModel>());

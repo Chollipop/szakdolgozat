@@ -8,6 +8,34 @@ namespace szakdolgozat.Services
 {
     public class ChartExportService
     {
+        private void ExportChartToPng(PlotModel plotModel, string filePath)
+        {
+            plotModel.Background = OxyColors.White;
+
+            var exporter = new PngExporter
+            {
+                Width = 1500,
+                Height = 1000
+            };
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                exporter.Export(plotModel, fileStream);
+            }
+        }
+
+        private void OpenImage(string filePath)
+        {
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo(filePath)
+                {
+                    UseShellExecute = true
+                }
+            };
+            process.Start();
+        }
+
         public void ExportPiechart(PlotModel plotModel)
         {
             var saveFileDialog = new SaveFileDialog
@@ -38,34 +66,6 @@ namespace szakdolgozat.Services
                 ExportChartToPng(plotModel, outputFilePath);
                 OpenImage(outputFilePath);
             }
-        }
-
-        private void ExportChartToPng(PlotModel plotModel, string filePath)
-        {
-            plotModel.Background = OxyColors.White;
-
-            var exporter = new PngExporter
-            {
-                Width = 1500,
-                Height = 1000
-            };
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                exporter.Export(plotModel, fileStream);
-            }
-        }
-
-        private void OpenImage(string filePath)
-        {
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo(filePath)
-                {
-                    UseShellExecute = true
-                }
-            };
-            process.Start();
         }
     }
 }

@@ -4,9 +4,6 @@ namespace szakdolgozat.Stores
 {
     public class NavigationStore
     {
-
-        public event Action CurrentViewModelChanged;
-
         private BaseViewModel _currentViewModel;
         public BaseViewModel CurrentViewModel
         {
@@ -18,6 +15,8 @@ namespace szakdolgozat.Stores
                 OnCurrentViewModelChanged();
             }
         }
+
+        public event Action CurrentViewModelChanged;
 
         private void OnCurrentViewModelChanged()
         {

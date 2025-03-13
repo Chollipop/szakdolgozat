@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using DotNetEnv;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
@@ -7,7 +8,6 @@ using szakdolgozat.Services;
 using szakdolgozat.Stores;
 using szakdolgozat.ViewModels;
 using szakdolgozat.Views;
-using DotNetEnv;
 
 namespace szakdolgozat
 {

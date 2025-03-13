@@ -17,7 +17,7 @@ namespace szakdolgozat.ViewModels
             App.ServiceProvider.GetRequiredService<AssetListViewModel>().AssetLogsChanged += OnAssetLogsChanged;
         }
 
-        public async Task LoadAssetLogs()
+        private async Task LoadAssetLogs()
         {
             using (var scope = App.ServiceProvider.CreateScope())
             {
@@ -49,11 +49,11 @@ namespace szakdolgozat.ViewModels
         protected virtual void OnAssetLogsChangedReapplyFilters()
         {
             AssetLogsChangedReapplyFilters?.Invoke(this, EventArgs.Empty);
-        }        
+        }
 
         public void NotifyAssetLogsChanged()
         {
             OnPropertyChanged(nameof(AssetLogs));
-        } 
+        }
     }
 }

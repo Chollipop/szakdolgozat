@@ -118,6 +118,11 @@ namespace szakdolgozat.ViewModels
             }
         }
 
+        private bool CanUpdateAssetAssignment()
+        {
+            return SelectedAssignment != null;
+        }
+
         private async void UpdateAssetAssignment()
         {
             if (SelectedAssignment != null)
@@ -148,11 +153,6 @@ namespace szakdolgozat.ViewModels
                     OnAssetAssignmentsChanged();
                 }
             }
-        }
-
-        private bool CanUpdateAssetAssignment()
-        {
-            return SelectedAssignment != null;
         }
 
         protected virtual void OnAssetAssignmentsChanged()

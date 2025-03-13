@@ -58,10 +58,8 @@
                     Width="100" Height="30" Margin="0,0,10,0" Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=edit}" />
             <Button Content="Delete Asset" Command="{Binding DeleteAssetCommand}" 
                     Width="100" Height="30" Margin="0,0,10,0" Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=edit}" />
-            <Button Content="Generate Column Chart" Command="{Binding GenerateColumnChartCommand}" 
-                    Width="150" Height="30" Margin="0,0,10,0" Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=view}" />
-            <Button Content="Generate Piechart" Command="{Binding GeneratePiechartCommand}" 
-                    Width="125" Height="30" Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=view}" />
+            <Button Content="Generate Chart" Command="{Binding GenerateChartCommand}" 
+                    Width="100" Height="30" Visibility="{Binding Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=view}" />
         </StackPanel>
     </Grid>
 </UserControl>
