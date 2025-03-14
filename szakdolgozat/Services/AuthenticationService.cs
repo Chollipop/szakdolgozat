@@ -144,7 +144,7 @@ namespace szakdolgozat.Services
                 string createUserSql = $"CREATE USER {userEmailWithBrackets} FROM EXTERNAL PROVIDER;";
                 string addDbReaderRoleSql = $"ALTER ROLE db_datareader ADD MEMBER {userEmailWithBrackets};";
                 string addDbWriterRoleSql = $"ALTER ROLE db_datawriter ADD MEMBER {userEmailWithBrackets};";
-                string addDbAccessAdminRoleSql = $"ALTER ROLE db_accessadmin ADD MEMBER {userEmailWithBrackets};";
+                string addDbOwnerRoleSql = $"ALTER ROLE db_owner ADD MEMBER {userEmailWithBrackets};";
 
                 while (true)
                 {
@@ -153,7 +153,7 @@ namespace szakdolgozat.Services
                         await context.Database.ExecuteSqlRawAsync(createUserSql);
                         await context.Database.ExecuteSqlRawAsync(addDbReaderRoleSql);
                         await context.Database.ExecuteSqlRawAsync(addDbWriterRoleSql);
-                        await context.Database.ExecuteSqlRawAsync(addDbAccessAdminRoleSql);
+                        await context.Database.ExecuteSqlRawAsync(addDbOwnerRoleSql);
 
                         return true;
                     }
